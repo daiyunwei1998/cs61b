@@ -175,6 +175,27 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        for(int i = 0;i < b.size(); i+=1){
+            for(int j = 0;j < b.size(); j+=1){
+
+                if(b.tile(i,j) != null){
+                    int target = b.tile(i,j).value();
+                    /* It is important that AND operator has a short circuit behavior.
+                    So that as soon as i-1 <0, tile(i-1,j) will not be evaluated */
+                    if (i-1 >=0 && b.tile(i-1,j)!= null && b.tile(i-1,j).value() == target){
+                        return true;
+                    }else if(i + 1 < b.size() && b.tile(i+1,j)!= null && b.tile(i+1,j).value() == target){
+                        return true;
+                    }else if(j-1 >=0 && b.tile(i,j-1)!= null && b.tile(i,j-1).value() == target){
+                        return true;
+                    }else if(j + 1 < b.size() && b.tile(i,j+1)!= null && b.tile(i,j+1).value() == target){
+                        return true;
+                    }
+                }else{
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
