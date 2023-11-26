@@ -1,16 +1,16 @@
 package deque;
 
-public class LinkedListDeque {
+public class LinkedListDeque<T> {
 
     private Node sentinel;
     public int size;
     public class Node{
         //helper class
         public Node prev;
-        public int item;
+        public T item;
         public Node next;
 
-        public Node(Node previous, int i, Node n) {
+        public Node(Node previous, T i, Node n) {
             prev = previous;
             item = i;
             next = n;
@@ -20,14 +20,14 @@ public class LinkedListDeque {
 
     public LinkedListDeque() {
         //instantiate an empty list
-        sentinel= new Node(null, 999,null);
+        sentinel= new Node(null, null,null);
         sentinel.prev = sentinel;
         sentinel.next = sentinel;
         size = 0;
     }
 
     public boolean isEmpty(){
-        if(size ==0){
+        if(size == 0){
             return true;
         }else{
             return false;
@@ -54,7 +54,7 @@ public class LinkedListDeque {
         }
     }
 
-    public void addFirst(int x){
+    public void addFirst(T x){
         Node newNode = new Node(sentinel,x,sentinel.next);
         if(size == 0){
             //if start from fresh
@@ -66,7 +66,7 @@ public class LinkedListDeque {
         }
         size += 1;
     }
-    public void addLast(int x){
+    public void addLast(T x){
         Node newNode = new Node(sentinel.prev,x,sentinel);
         if(size == 0){
             //if start from fresh
@@ -94,7 +94,7 @@ public class LinkedListDeque {
             size -= 1;
         }
     }
-    public Integer get(int index){
+    public T get(int index){
         if(index < 0 ||index > size-1){
             return null; //should return null
         }else{
