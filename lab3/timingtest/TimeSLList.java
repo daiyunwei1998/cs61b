@@ -51,10 +51,8 @@ public class TimeSLList {
             for(int e = 0; e < ops; e++){
                 tempList.getLast();
             }
-            double timeInSeconds = sw.elapsedTime();
-            timeList.addLast(timeInSeconds);
+            timeList.addLast(sw.elapsedTime());
             opsList.addLast(ops);
-            System.out.print("The time it took to getlast for an sLList of size "+n+" is "+timeInSeconds+'\n');
         }
 
 

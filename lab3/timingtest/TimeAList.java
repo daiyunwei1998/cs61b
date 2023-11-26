@@ -50,10 +50,8 @@ public class TimeAList {
                 ops ++;
             }
 
-            double timeInSeconds = sw.elapsedTime();
-            timeList.addLast(timeInSeconds);
+            timeList.addLast( sw.elapsedTime());
             opsList.addLast(ops);
-            System.out.print("The time it took to create the array of size "+n+" is "+timeInSeconds+'\n');
         }
 
 
