@@ -80,19 +80,25 @@ public class LinkedListDeque<T> {
         size += 1;
     }
 
-    public void removeFirst(){
+    public T removeFirst(){
         if(size > 0){
+            T item = sentinel.next.item;
             sentinel.next = sentinel.next.next;
             size -= 1;
+            return item;
         }
+        return null;
     }
 
-    public void removeLast(){
+    public T removeLast(){
         if(size > 0){
+            T item = sentinel.prev.prev.next.item;
             sentinel.prev.prev.next = sentinel;
             sentinel.prev = sentinel.prev.prev;
             size -= 1;
+            return item;
         }
+        return null;
     }
     public T get(int index){
         if(index < 0 ||index > size-1){
