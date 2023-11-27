@@ -7,6 +7,7 @@ public class ArrayDeque<T> {
     private int size;
     private int headInitial;
     private int tailInitial;
+    private double usageFactor = 0.25;
 
     /** Creates an empty list. */
     public ArrayDeque() {
@@ -20,32 +21,26 @@ public class ArrayDeque<T> {
 
     public void addFirst(T item) {
         if(size == items.length){
-            System.out.println("We don't do that here");
-            // TODO: resize if array is full
-
-        }else{
-            items[headIndex] = item;
-            size += 1;
-            headIndex -= 1;
-            if(headIndex < 0 ) {
-                headIndex = headIndex + items.length;
-            }
+            resize();
+        }
+        items[headIndex] = item;
+        size += 1;
+        headIndex -= 1;
+        if(headIndex < 0 ) {
+            headIndex = headIndex + items.length;
         }
     }
 
     /** Inserts X into the back of the list. */
     public void addLast(T item) {
         if(size == items.length){
-            System.out.println("We don't do that here");
-            // TODO: resize if array is full
-
-        }else{
-            items[tailIndex] = item;
-            size += 1;
-            tailIndex += 1;
-            if(tailIndex > items.length - 1 ) {
-                tailIndex = tailIndex - items.length;
-            }
+            resize();
+        }
+        items[tailIndex] = item;
+        size += 1;
+        tailIndex += 1;
+        if(tailIndex > items.length - 1 ) {
+            tailIndex = tailIndex - items.length;
         }
     }
 
@@ -58,7 +53,7 @@ public class ArrayDeque<T> {
     }
 
     public void printDeque() {
-        if(headIndex > headInitial) {
+        if(headIndex >= headInitial) {
             for(int i = headIndex + 1; i < items.length; i++){
                 System.out.print(items[i]+" ");
             }
@@ -68,7 +63,7 @@ public class ArrayDeque<T> {
             for(int i = tailInitial; i < headIndex + 1; i++ ) {
                 System.out.print(items[i]+" ");
             }
-        }else if(tailIndex < tailInitial){
+        }else if(tailIndex <= tailInitial){
             for(int i = headIndex + 1; i < headInitial + 1; i++) {
                 System.out.print(items[i]+" ");
             }
@@ -105,7 +100,27 @@ public class ArrayDeque<T> {
         System.out.println();
     }
     public void resize(){
+        T[] newItems = (T []) new Object[(int)Math.round(items.length/usageFactor)];
+        int midPoint = newItems.length/2;
+        int halfSize = size/2;
 
+        if(headIndex >= headInitial) {
+            System.arraycopy(items,headIndex + 1,newItems,midPoint - halfSize + 1,items.length - headIndex - 1);
+            System.arraycopy(items,0,newItems,midPoint - halfSize + items.length - headIndex,tailIndex);
+        }else if(tailIndex <= tailInitial){
+            System.arraycopy(items,headInitial + 1,newItems,midPoint - halfSize + 1,items.length - headInitial - 1);
+            System.arraycopy(items,0,newItems,midPoint - halfSize + items.length - headInitial,tailIndex);
+        }else{
+            System.arraycopy(items,headIndex + 1,newItems,midPoint - halfSize + 1,size);
+
+
+        }
+
+        headInitial = midPoint - halfSize;
+        headIndex = headInitial;
+        tailInitial = headInitial + size;
+        tailIndex = tailInitial;
+        items = newItems;
     }
 
 

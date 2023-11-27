@@ -155,4 +155,113 @@ public class test {
         System.out.println(L.get(1));
     }
 
-}
+    @Test
+    public void testResize(){
+        ArrayDeque<Integer> L = new ArrayDeque<>();
+        L.resize();
+
+    }
+@Test
+    public void testResize1(){
+        ArrayDeque<Integer> L = new ArrayDeque<>();
+        L.addFirst(1);
+        L.addFirst(2);
+        L.addFirst(3);
+        L.addFirst(4);
+        L.addFirst(5);
+        L.printInternal();
+        L.printDeque();
+        L.resize();
+        System.out.println();
+        L.printInternal();
+        L.printDeque();
+    }
+    @Test
+    public void testResize2(){
+        ArrayDeque<Integer> L = new ArrayDeque<>();
+        L.addLast(1);
+        L.addLast(2);
+        L.addLast(3);
+        L.addLast(4);
+        L.addLast(5);
+        L.printInternal();
+        L.printDeque();
+        L.resize();
+        System.out.println();
+        L.printInternal();
+        L.printDeque();
+    }
+
+    @Test
+    public void testResize3(){
+        ArrayDeque<Integer> L = new ArrayDeque<>();
+        L.addLast(1);
+        L.addLast(2);
+        L.addFirst(3);
+        L.addLast(4);
+        L.addFirst(5);
+        L.addFirst(6);
+        L.addFirst(7);
+        L.printInternal();
+        L.printDeque();
+        L.resize();
+        System.out.println();
+        L.printInternal();
+        L.printDeque();
+    }
+
+    @Test
+    public void testResize4(){
+        ArrayDeque<Integer> L = new ArrayDeque<>();
+        L.addLast(1);
+        L.addLast(2);
+        L.addLast(3);
+        L.addLast(4);
+        L.addLast(5);
+        L.addLast(6);
+        L.addLast(7);
+        L.addLast(8);
+        L.addLast(9);
+        L.addLast(10);
+        L.addLast(11);
+        L.printInternal();
+        L.printDeque();
+    }
+
+    public void randLargeSample() {
+        ArrayDeque<Integer> L = new ArrayDeque<>();
+        LinkedListDeque<Integer> groundTruth = new LinkedListDeque<>();
+
+        for (int i = 1; i < 33; i++) {
+            double randomValue = Math.random();
+            if (randomValue < 0.5) {
+                L.addFirst(i);
+                groundTruth.addFirst(i);
+            } else {
+                L.addLast(i);
+                groundTruth.addLast(i);
+            }
+        }
+        L.printInternal();
+        L.printDeque();
+        System.out.println();
+        groundTruth.printDeque();
+    }
+
+
+    @Test
+    public void testResizeSample(){
+        for(int i = 0; i < 10; i++) {
+            System.out.print("Test "+i+"\n");
+            randLargeSample();
+            System.out.println();
+        }
+    }
+
+
+
+
+
+}//test class ends
+
+
