@@ -1,5 +1,7 @@
 package deque;
 
+import java.util.Arrays;
+
 public class ArrayDeque<T> {
     private T[] items;
     private int headIndex;
@@ -13,22 +15,21 @@ public class ArrayDeque<T> {
     public ArrayDeque() {
         items = (T []) new Object[8];
         size = 0;
-        headIndex = 3;
-        headInitial = 3;
-        tailIndex = 4;
-        tailInitial = 4;
+        headIndex = 4;  //point to the current head, actually start with 3
+        tailIndex = 3;  //point to the current tail, actually start with 4
     }
 
     public void addFirst(T item) {
         if(size == items.length){
             resize();
         }
-        items[headIndex] = item;
-        size += 1;
         headIndex -= 1;
         if(headIndex < 0 ) {
+            // go to the very end
             headIndex = headIndex + items.length;
         }
+        items[headIndex] = item;
+        size += 1;
     }
 
     /** Inserts X into the back of the list. */
@@ -36,13 +37,15 @@ public class ArrayDeque<T> {
         if(size == items.length){
             resize();
         }
+        tailIndex += 1;
+        if(tailIndex == items.length ) {
+            // go to the very front
+            tailIndex = 0;
+        }
         items[tailIndex] = item;
         size += 1;
-        tailIndex += 1;
-        if(tailIndex > items.length - 1 ) {
-            tailIndex = tailIndex - items.length;
-        }
     }
+
 
     public boolean isEmpty() {
         if(size == 0){
@@ -53,29 +56,24 @@ public class ArrayDeque<T> {
     }
 
     public void printDeque() {
-        if(headIndex >= headInitial) {
-            for(int i = headIndex + 1; i < items.length; i++){
+        if(headIndex > tailIndex){
+            for(int i = headIndex; i <items.length; i++){
                 System.out.print(items[i]+" ");
             }
-            for(int i = 0; i < headInitial + 1; i++) {
-                System.out.print(items[i]+" ");
-            }
-            for(int i = tailInitial; i < headIndex + 1; i++ ) {
-                System.out.print(items[i]+" ");
-            }
-        }else if(tailIndex <= tailInitial){
-            for(int i = headIndex + 1; i < headInitial + 1; i++) {
-                System.out.print(items[i]+" ");
-            }
-            for(int i = tailInitial; i < items.length; i++){
-                System.out.print(items[i]+" ");
-            }
-            for(int i = 0; i < tailIndex; i++){
-                System.out.print(items[i]+" ");
+            for(int i = 0; i < tailIndex + 1; i++){
+                if(i == tailIndex){
+                    System.out.print(items[i]+"\n");
+                }else{
+                    System.out.print(items[i]+" ");
+                }
             }
         }else{
-            for (T item : items) {
-                System.out.print(item + " ");
+            for(int i = headIndex; i < tailIndex + 1; i++){
+                if(i == tailIndex){
+                    System.out.print(items[i]+"\n");
+                }else{
+                    System.out.print(items[i]+" ");
+                }
             }
         }
     }
@@ -104,50 +102,33 @@ public class ArrayDeque<T> {
         int midPoint = newItems.length/2;
         int halfSize = size/2;
 
-        if(headIndex >= headInitial) {
-            System.arraycopy(items,headIndex + 1,newItems,midPoint - halfSize + 1,items.length - headIndex - 1);
-            System.arraycopy(items,0,newItems,midPoint - halfSize + items.length - headIndex,tailIndex);
-        }else if(tailIndex <= tailInitial){
-            System.arraycopy(items,headInitial + 1,newItems,midPoint - halfSize + 1,items.length - headInitial - 1);
-            System.arraycopy(items,0,newItems,midPoint - halfSize + items.length - headInitial,tailIndex);
+        if(headIndex > tailIndex){
+            System.arraycopy(items,headIndex,newItems,midPoint - halfSize + 1,items.length - headIndex);
+            System.arraycopy(items,0,newItems,midPoint - halfSize + 1 + items.length - headIndex,tailIndex + 1);
         }else{
-            System.arraycopy(items,headIndex + 1,newItems,midPoint - halfSize + 1,size);
-
-
+            System.arraycopy(items,headIndex,newItems,midPoint - halfSize + 1,size);
         }
-
-        headInitial = midPoint - halfSize;
-        headIndex = headInitial;
-        tailInitial = headInitial + size;
-        tailIndex = tailInitial;
+        headIndex =midPoint - halfSize + 1;
+        tailIndex =midPoint - halfSize + items.length;
         items = newItems;
+
     }
 
 
     /** Gets the ith item in the list (0 is the front). */
     public T get(int i) {
+        //TODO: get
         if(i >= size){
             return(null);
         }
-        //what happens if the array not full? condition 1 and 2 might break
-        if(headIndex >= headInitial) {
-            int actualIndex = i + headIndex + 1;
-            if(actualIndex >= items.length){
-                actualIndex -= items.length;
+        if(headIndex > tailIndex){
+            if(headIndex + i >= items.length){
+                return(items[headIndex + i - items.length]);
             }
-            return items[actualIndex];
-
-        }else if(tailIndex <= tailInitial){
-            int actualIndex = i + 1 + headIndex;
-            if(actualIndex >= items.length){
-                actualIndex -= items.length;
-            }
-            return items[actualIndex];
+            return(items[headIndex + i]);
         }else{
-            int actualIndex = i + 1 + headIndex;
-            return items[actualIndex];
+            return(items[headIndex + i]);
         }
-
     }
 
     /** Returns the number of items in the list. */
@@ -156,12 +137,14 @@ public class ArrayDeque<T> {
     }
 
     public T removeFirst() {
+        //TODO
         return null;
     }
 
     /** Deletes item from back of the list and
      * returns deleted item. */
     public int removeLast() {
+        //TODO
         return 0;
     }
 }

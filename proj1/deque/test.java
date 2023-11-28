@@ -1,5 +1,8 @@
 package deque;
 import org.junit.Test;
+
+import java.util.Arrays;
+
 import static org.junit.Assert.*;
 
 public class test {
@@ -72,6 +75,8 @@ public class test {
         }
         L.printInternal();
         L.printDeque();
+        System.out.print("Ground Truth: ");
+        groundTruth.printDeque();
     }
 
 
@@ -112,7 +117,7 @@ public class test {
         ArrayDeque<Integer> L = new ArrayDeque<>();
         LinkedListDeque<Integer> groundTruth = new LinkedListDeque<>();
 
-        int testSize = 0 + (int)(Math.random() * ((8 - 0) + 1));
+        int testSize = 0 + (int)(Math.random() * ((32 - 0) + 1));
         for (int i = 1; i < testSize + 1; i++) {
             double randomValue = Math.random();
             if (randomValue < 0.5) {
@@ -134,8 +139,8 @@ public class test {
 
     @Test
     public void multipleTestGet(){
-        for(int i =0; i < 10000; i++){
-            int index = 0 + (int)(Math.random() * ((8 - 0) + 1));
+        for(int i =0; i < 100000; i++){
+            int index = 0 + (int)(Math.random() * ((32 - 0) + 1));
             testGetSparse(index);
         }
 
@@ -162,90 +167,61 @@ public class test {
 
     }
 @Test
-    public void testResize1(){
+    public void testResizeOnlyAddFirst(){
+        //if condition 1
         ArrayDeque<Integer> L = new ArrayDeque<>();
-        L.addFirst(1);
-        L.addFirst(2);
-        L.addFirst(3);
-        L.addFirst(4);
-        L.addFirst(5);
+        LinkedListDeque<Integer> groundTruth = new LinkedListDeque<>();
+        for(int i = 1; i < 18; i++){
+            L.addFirst(i);
+            groundTruth.addFirst(i);
+
+        }
         L.printInternal();
         L.printDeque();
-        L.resize();
-        System.out.println();
-        L.printInternal();
-        L.printDeque();
-    }
-    @Test
-    public void testResize2(){
-        ArrayDeque<Integer> L = new ArrayDeque<>();
-        L.addLast(1);
-        L.addLast(2);
-        L.addLast(3);
-        L.addLast(4);
-        L.addLast(5);
-        L.printInternal();
-        L.printDeque();
-        L.resize();
-        System.out.println();
-        L.printInternal();
-        L.printDeque();
+        System.out.print("Ground Truth: ");
+        groundTruth.printDeque();
     }
 
     @Test
-    public void testResize3(){
+    public void testResizeOnlyAddLast(){
+        //if condition 1
         ArrayDeque<Integer> L = new ArrayDeque<>();
-        L.addLast(1);
-        L.addLast(2);
-        L.addFirst(3);
-        L.addLast(4);
-        L.addFirst(5);
-        L.addFirst(6);
-        L.addFirst(7);
+        LinkedListDeque<Integer> groundTruth = new LinkedListDeque<>();
+        for(int i = 1; i < 18; i++){
+            L.addLast(i);
+            groundTruth.addLast(i);
+
+        }
         L.printInternal();
         L.printDeque();
-        L.resize();
-        System.out.println();
-        L.printInternal();
-        L.printDeque();
+        System.out.print("Ground Truth: ");
+        groundTruth.printDeque();
     }
 
-    @Test
-    public void testResize4(){
-        ArrayDeque<Integer> L = new ArrayDeque<>();
-        L.addLast(1);
-        L.addLast(2);
-        L.addLast(3);
-        L.addLast(4);
-        L.addLast(5);
-        L.addLast(6);
-        L.addLast(7);
-        L.addLast(8);
-        L.addLast(9);
-        L.addLast(10);
-        L.addLast(11);
-        L.printInternal();
-        L.printDeque();
-    }
 
     public void randLargeSample() {
         ArrayDeque<Integer> L = new ArrayDeque<>();
         LinkedListDeque<Integer> groundTruth = new LinkedListDeque<>();
 
-        for (int i = 1; i < 33; i++) {
+        int totalSize = 32;
+        int[] record = new int[totalSize];
+        for (int i = 1; i < totalSize + 1; i++) {
             double randomValue = Math.random();
             if (randomValue < 0.5) {
                 L.addFirst(i);
                 groundTruth.addFirst(i);
+                record[i-1] = 1;
             } else {
                 L.addLast(i);
                 groundTruth.addLast(i);
+                record[i-1] = 0;
             }
         }
         L.printInternal();
         L.printDeque();
-        System.out.println();
+        System.out.print("GroundTruth: ");
         groundTruth.printDeque();
+        System.out.println("case code: "+Arrays.toString(record));
     }
 
 
@@ -258,7 +234,45 @@ public class test {
         }
     }
 
+    public int[] string2array(String code){
+        String[] stringArray = code.split(", ");
 
+        // Convert the array of strings to an array of integers
+        int[] intArray = new int[stringArray.length];
+        for (int i = 0; i < stringArray.length; i++) {
+            intArray[i] = Integer.parseInt(stringArray[i]);
+        }
+
+        // Print the resulting array of integers
+        //for (int num : intArray) {
+        //    System.out.print(num + " ");
+        //}
+        return intArray;
+    }
+
+
+
+    @Test
+    public void debug(){
+        String code = "0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1";
+
+        ArrayDeque<Integer> L = new ArrayDeque<>();
+        int[] intArray = string2array(code);
+
+        int i = 0;
+        for (int num : intArray) {
+            if(num==1){
+                L.addFirst(i);
+                i++;
+            }else{
+                L.addLast(i);
+                i++;
+            }
+        }
+        L.printInternal();
+        L.printDeque();
+        //problem, headInitial is changed after resize!!
+    }
 
 
 
