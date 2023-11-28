@@ -21,7 +21,7 @@ public class ArrayDeque<T> {
 
     public void addFirst(T item) {
         if(size == items.length){
-            resize();
+            resize(1/usageFactor);
         }
         headIndex -= 1;
         if(headIndex < 0 ) {
@@ -35,7 +35,7 @@ public class ArrayDeque<T> {
     /** Inserts X into the back of the list. */
     public void addLast(T item) {
         if(size == items.length){
-            resize();
+            resize(1/usageFactor);
         }
         tailIndex += 1;
         if(tailIndex == items.length ) {
@@ -97,8 +97,8 @@ public class ArrayDeque<T> {
         }
         System.out.println();
     }
-    public void resize(){
-        T[] newItems = (T []) new Object[(int)Math.round(items.length/usageFactor)];
+    public void resize(double factor){
+        T[] newItems = (T []) new Object[(int)Math.round(items.length * factor)];
         int midPoint = newItems.length/2;
         int halfSize = size/2;
 
@@ -117,7 +117,6 @@ public class ArrayDeque<T> {
 
     /** Gets the ith item in the list (0 is the front). */
     public T get(int i) {
-        //TODO: get
         if(i >= size){
             return(null);
         }
@@ -137,14 +136,36 @@ public class ArrayDeque<T> {
     }
 
     public T removeFirst() {
-        //TODO
-        return null;
+        if(size < items.length * usageFactor){
+            resize(0.5);
+            //TODO resize();
+        }
+        T itemRemoved =  items[headIndex];
+        items[headIndex] = null;
+        headIndex += 1;
+        size -= 1;
+        if(headIndex > items.length - 1 ) {
+            // go to the very front
+            headIndex = 0;
+        }
+        return itemRemoved;
+
     }
 
     /** Deletes item from back of the list and
      * returns deleted item. */
-    public int removeLast() {
-        //TODO
-        return 0;
+    public T removeLast() {
+        if(size < items.length * usageFactor){
+            resize(0.5);
+            //TODO test resize();
+        }
+        T itemRemoved = items[tailIndex];
+        items[tailIndex] = null;
+        tailIndex -= 1;
+        if(tailIndex < 0 ) {
+            // go to the very end
+            tailIndex = items.length - 1;
+        }
+        return itemRemoved;
     }
 }

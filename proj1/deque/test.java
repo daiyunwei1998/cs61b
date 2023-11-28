@@ -160,12 +160,7 @@ public class test {
         System.out.println(L.get(1));
     }
 
-    @Test
-    public void testResize(){
-        ArrayDeque<Integer> L = new ArrayDeque<>();
-        L.resize();
 
-    }
 @Test
     public void testResizeOnlyAddFirst(){
         //if condition 1
@@ -273,6 +268,49 @@ public class test {
         L.printDeque();
         //problem, headInitial is changed after resize!!
     }
+
+
+@Test
+    public void testRemove() {
+        ArrayDeque<Integer> L = new ArrayDeque<>();
+        LinkedListDeque<Integer> groundTruth = new LinkedListDeque<>();
+
+        int totalSize = 0 + (int)(Math.random() * ((32 - 0) + 1));
+        int[] record = new int[totalSize];
+        for (int i = 1; i < totalSize + 1; i++) {
+            double randomValue = Math.random();
+            if (randomValue < 0.5) {
+                L.addFirst(i);
+                groundTruth.addFirst(i);
+                record[i-1] = 1;
+            } else {
+                L.addLast(i);
+                groundTruth.addLast(i);
+                record[i-1] = 0;
+            }
+        }
+
+        for(int i = 0; i < totalSize; i++){
+            double randomValue = Math.random();
+            if (randomValue < 0.5) {
+                assertEquals(groundTruth.removeFirst(),L.removeFirst());
+            } else {
+                assertEquals(groundTruth.removeLast(),L.removeLast());
+            }
+        }
+    }
+
+
+    @Test
+    public void testRemoveSample(){
+        for(int i = 0; i < 10; i++) {
+            System.out.print("Test "+i+"\n");
+            randLargeSample();
+            System.out.println();
+        }
+    }
+
+
 
 
 
