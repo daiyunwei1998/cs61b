@@ -352,6 +352,24 @@ public class test {
         }
     }
 
+    @Test
+    public void testNegativeSize() {
+        ArrayDeque<Integer> L = new ArrayDeque<>();
+        LinkedListDeque<Integer> groundTruth = new LinkedListDeque<>();
+
+        L.addFirst(1);
+        groundTruth.addFirst(1);
+        L.printInternal();
+        assertEquals(groundTruth.removeFirst(),L.removeFirst());
+        System.out.print(L.size());
+        assertEquals(groundTruth.removeFirst(),L.removeFirst());
+
+
+
+
+    }
+
+
 
 }//test class ends
 

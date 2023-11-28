@@ -139,7 +139,7 @@ public class ArrayDeque<T> {
         if(size == 0){
             return null;
         }
-        if(size < items.length * usageFactor){
+        if(size < (items.length * usageFactor) && size >= 16){
             resize(0.5);
             //TODO resize();
         }
@@ -165,7 +165,7 @@ public class ArrayDeque<T> {
         if(size == 0){
             return null;
         }
-        if(size < items.length * usageFactor){
+        if(size < (items.length * usageFactor) && size >= 16){
             resize(0.5);
             //TODO test resize();
         }
