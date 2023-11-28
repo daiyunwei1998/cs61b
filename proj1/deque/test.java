@@ -311,7 +311,46 @@ public class test {
     }
 
 
+    @Test
+    public void testRemoveFirst1() {
+        ArrayDeque<Integer> L = new ArrayDeque<>();
+        LinkedListDeque<Integer> groundTruth = new LinkedListDeque<>();
 
+        int totalSize = 0 + (int)(Math.random() * ((32 - 0) + 1));
+        int[] record = new int[totalSize];
+        for (int i = 1; i < totalSize + 1; i++) {
+            double randomValue = Math.random();
+            if (randomValue < 0.5) {
+                L.addFirst(i);
+                groundTruth.addFirst(i);
+                record[i-1] = 1;
+            } else {
+                L.addLast(i);
+                groundTruth.addLast(i);
+                record[i-1] = 0;
+            }
+        }
+
+
+        assertEquals(groundTruth.removeFirst(),L.removeFirst());
+        L.printInternal();
+        assertEquals(groundTruth.removeFirst(),L.removeFirst());
+        L.printInternal();
+        assertEquals(groundTruth.removeFirst(),L.removeFirst());
+        L.printInternal();
+        assertEquals(groundTruth.removeFirst(),L.removeFirst());
+        L.printInternal();
+        assertEquals(groundTruth.removeFirst(),L.removeFirst());
+        L.printInternal();
+
+    }
+
+    @Test
+    public void testRemoveFirstLoop(){
+        for(int i = 0; i < 100000; i++) {
+            testRemoveFirst1();
+        }
+    }
 
 
 }//test class ends

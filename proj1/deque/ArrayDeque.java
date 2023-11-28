@@ -136,6 +136,9 @@ public class ArrayDeque<T> {
     }
 
     public T removeFirst() {
+        if(size == 0){
+            return null;
+        }
         if(size < items.length * usageFactor){
             resize(0.5);
             //TODO resize();
@@ -148,6 +151,10 @@ public class ArrayDeque<T> {
             // go to the very front
             headIndex = 0;
         }
+        if(size ==0){
+            headIndex = 4;
+            tailIndex = 3;
+        }
         return itemRemoved;
 
     }
@@ -155,6 +162,9 @@ public class ArrayDeque<T> {
     /** Deletes item from back of the list and
      * returns deleted item. */
     public T removeLast() {
+        if(size == 0){
+            return null;
+        }
         if(size < items.length * usageFactor){
             resize(0.5);
             //TODO test resize();
@@ -165,6 +175,10 @@ public class ArrayDeque<T> {
         if(tailIndex < 0 ) {
             // go to the very end
             tailIndex = items.length - 1;
+        }
+        if(size ==0){
+            headIndex = 4;
+            tailIndex = 3;
         }
         return itemRemoved;
     }
