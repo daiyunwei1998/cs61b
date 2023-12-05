@@ -79,6 +79,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
     public T removeFirst() {
         if (size > 0) {
             T item = sentinel.next.item;
+            sentinel.next.item = null; //unlink objects to save memory
             sentinel.next = sentinel.next.next;
             size -= 1;
             return item;
@@ -89,6 +90,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
     public T removeLast() {
         if (size > 0) {
             T item = sentinel.prev.prev.next.item;
+            sentinel.prev.prev.next.item = null;
             sentinel.prev.prev.next = sentinel;
             sentinel.prev = sentinel.prev.prev;
             size -= 1;
@@ -177,7 +179,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
         }
         //close examination
         for (int i = 0; i < other.size(); i++) {
-            if (other.get(i) != this.get(i)) {
+            if (!other.get(i).equals(this.get(i))) {
                 return false;
             }
         }
