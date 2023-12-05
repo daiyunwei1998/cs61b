@@ -9,7 +9,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     private int tailIndex;
     private int size;
     private double usageFactor = 0.25;
-    private int sizeThreshold = 16;
+    private int sizeThreshold = 8;
 
     /** Creates an empty list. */
     public ArrayDeque() {
@@ -70,7 +70,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         }
     }
 
-    private void printInternal() {
+    public void printInternal() {
         System.out.print('|');
         for (int i = 0; i < items.length; i++) {
             System.out.print(i);
@@ -103,7 +103,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
             System.arraycopy(items, headIndex, newItems, midPoint - halfSize + 1, size);
         }
         headIndex = midPoint - halfSize + 1;
-        tailIndex = midPoint - halfSize + items.length;
+        tailIndex = midPoint - halfSize + size;
         items = newItems;
 
     }
@@ -136,7 +136,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
             return null;
         }
         if (size < (items.length * usageFactor) && size >= sizeThreshold) {
-            resize(0.5);
+            resize(0.3);
         }
         T itemRemoved =  items[headIndex];
         items[headIndex] = null;
@@ -162,7 +162,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
             return null;
         }
         if (size < (items.length * usageFactor) && size >= sizeThreshold) {
-            resize(0.5);
+            resize(0.3);
         }
         T itemRemoved = items[tailIndex];
         items[tailIndex] = null;
