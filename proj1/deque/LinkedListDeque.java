@@ -2,7 +2,7 @@ package deque;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class LinkedListDeque<T> implements Iterable<T> {
+public class LinkedListDeque<T> implements Deque<T>,Iterable<T> {
 
     private Node sentinel;
     public int size;
@@ -28,18 +28,11 @@ public class LinkedListDeque<T> implements Iterable<T> {
         size = 0;
     }
 
-    public boolean isEmpty(){
-        if(size == 0){
-            return true;
-        }else{
-            return false;
-        }
-    }
-
+    @Override
     public int size(){
         return size;
     }
-
+    @Override
     public void printDeque(){
         //Prints the items in the deque from first to last, separated by a space.
         // Once all the items have been printed, print out a new line.
@@ -55,7 +48,7 @@ public class LinkedListDeque<T> implements Iterable<T> {
             System.out.println("Empty List");
         }
     }
-
+    @Override
     public void addFirst(T x){
         Node newNode = new Node(sentinel,x,sentinel.next);
         if(size == 0){
@@ -68,6 +61,7 @@ public class LinkedListDeque<T> implements Iterable<T> {
         }
         size += 1;
     }
+    @Override
     public void addLast(T x){
         Node newNode = new Node(sentinel.prev,x,sentinel);
         if(size == 0){
@@ -81,7 +75,7 @@ public class LinkedListDeque<T> implements Iterable<T> {
         }
         size += 1;
     }
-
+    @Override
     public T removeFirst(){
         if(size > 0){
             T item = sentinel.next.item;
@@ -91,7 +85,7 @@ public class LinkedListDeque<T> implements Iterable<T> {
         }
         return null;
     }
-
+    @Override
     public T removeLast(){
         if(size > 0){
             T item = sentinel.prev.prev.next.item;
@@ -102,6 +96,7 @@ public class LinkedListDeque<T> implements Iterable<T> {
         }
         return null;
     }
+    @Override
     public T get(int index){
         if(index < 0 ||index > size-1){
             return null; //should return null

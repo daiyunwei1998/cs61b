@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class ArrayDeque<T> implements Iterable<T> {
+public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     private T[] items;
     private int headIndex;
     private int tailIndex;
@@ -18,7 +18,7 @@ public class ArrayDeque<T> implements Iterable<T> {
         headIndex = 4;  //point to the current head, actually start with 3
         tailIndex = 3;  //point to the current tail, actually start with 4
     }
-
+    @Override
     public void addFirst(T item) {
         if(size == items.length){
             resize(1/usageFactor);
@@ -31,7 +31,7 @@ public class ArrayDeque<T> implements Iterable<T> {
         items[headIndex] = item;
         size += 1;
     }
-
+    @Override
     /** Inserts X into the back of the list. */
     public void addLast(T item) {
         if(size == items.length){
@@ -46,15 +46,7 @@ public class ArrayDeque<T> implements Iterable<T> {
         size += 1;
     }
 
-
-    public boolean isEmpty() {
-        if(size == 0){
-            return true;
-        }else{
-            return false;
-        }
-    }
-
+    @Override
     public void printDeque() {
         if(headIndex > tailIndex){
             for(int i = headIndex; i <items.length; i++){
@@ -77,7 +69,7 @@ public class ArrayDeque<T> implements Iterable<T> {
             }
         }
     }
-
+    @Override
     public void printInternal() {
         System.out.print('|');
         for(int i = 0; i < items.length; i++){
@@ -114,7 +106,7 @@ public class ArrayDeque<T> implements Iterable<T> {
 
     }
 
-
+    @Override
     /** Gets the ith item in the list (0 is the front). */
     public T get(int i) {
         if(i >= size){
@@ -130,11 +122,13 @@ public class ArrayDeque<T> implements Iterable<T> {
         }
     }
 
+    @Override
     /** Returns the number of items in the list. */
     public int size() {
         return size;
     }
 
+    @Override
     public T removeFirst() {
         if(size == 0){
             return null;
@@ -159,6 +153,7 @@ public class ArrayDeque<T> implements Iterable<T> {
 
     }
 
+    @Override
     /** Deletes item from back of the list and
      * returns deleted item. */
     public T removeLast() {
