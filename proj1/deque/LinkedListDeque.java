@@ -1,6 +1,8 @@
 package deque;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
-public class LinkedListDeque<T> {
+public class LinkedListDeque<T> implements Iterable<T> {
 
     private Node sentinel;
     public int size;
@@ -111,6 +113,49 @@ public class LinkedListDeque<T> {
             return p.item;
         }
     }
+    public T getRecursiveHelper(int index, Node p){
+        if(index < 0 ||index > size-1){
+            return null; //should return null
+        }else{
+            if(index == 0 ){
+                return p.item;
+            }else{
+                p = p.next;
+                index -= 1;
+                return getRecursiveHelper(index,p);
+            }
+        }
+    }
+    public T getRecursive(int index){
+        Node p = sentinel.next;
+        return getRecursiveHelper(index,p);
 
+    }
 
+    @Override
+    public Iterator<T> iterator() {
+        return new LinkedListDequeIterator();
+    }
+
+    private class LinkedListDequeIterator implements Iterator<T> {
+        // Implement the Iterator methods (hasNext, next, remove) here...
+
+        private Node current = sentinel.next;
+
+        @Override
+        public boolean hasNext() {
+            return current != sentinel; //circular implementation
+        }
+
+        @Override
+        public T next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            T item = current.item;
+            current = current.next;
+            return item;
+        }
+
+    }
 }

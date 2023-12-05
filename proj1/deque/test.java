@@ -20,12 +20,62 @@ public class test {
     }
 
     @Test
+    public void testRecursiveGet(){
+        LinkedListDeque<Integer> L = new LinkedListDeque<>();
+        L.addFirst(1);
+        L.addFirst(2);
+        L.addFirst(3);
+        L.addFirst(4);
+        L.addFirst(5);
+        L.addFirst(6);
+        L.printDeque();
+        int ans = L.getRecursive(0);
+        System.out.println(ans);
+    }
+
+    @Test
+    public void testLLIter(){
+        LinkedListDeque<Integer> L = new LinkedListDeque<>();
+        L.addFirst(1);
+        L.addFirst(2);
+        L.addFirst(3);
+        L.addFirst(4);
+        L.addFirst(5);
+        L.addFirst(6);
+        L.printDeque();
+        for(int item:L){
+            System.out.print(item);
+        }
+    }
+
+    @Test
     public  void case2(){
         ArrayDeque<Integer> L = new ArrayDeque<>();
         L.addFirst(1);
         L.addFirst(2);
         L.addFirst(3);
         L.addFirst(4);
+        L.addFirst(5);
+        L.addFirst(6);
+        L.addFirst(7);
+        L.addFirst(8);
+        L.addFirst(9);
+
+        L.printInternal();
+        for(int item:L){
+            System.out.print(item);
+        }
+    }
+
+    @Test
+    public  void testArrayIterator(){
+        ArrayDeque<Integer> L = new ArrayDeque<>();
+        L.addFirst(1);
+        L.addFirst(2);
+        L.addFirst(3);
+        L.addFirst(4);
+        L.addFirst(5);
+        L.addFirst(6);
         L.printInternal();
         L.printDeque();
     }
@@ -359,8 +409,16 @@ public class test {
 
         L.addFirst(1);
         groundTruth.addFirst(1);
+        L.addFirst(1);
+        groundTruth.addFirst(1);
+        L.addFirst(1);
+        groundTruth.addFirst(1);
         L.printInternal();
         assertEquals(groundTruth.removeFirst(),L.removeFirst());
+        assertEquals(groundTruth.removeFirst(),L.removeFirst());
+        assertEquals(groundTruth.removeFirst(),L.removeFirst());
+        assertEquals(groundTruth.removeFirst(),L.removeFirst()); assertEquals(groundTruth.removeFirst(),L.removeFirst());
+
         System.out.print(L.size());
         assertEquals(groundTruth.removeFirst(),L.removeFirst());
 

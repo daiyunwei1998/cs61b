@@ -1,14 +1,14 @@
 package deque;
 
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
-public class ArrayDeque<T> {
+public class ArrayDeque<T> implements Iterable<T> {
     private T[] items;
     private int headIndex;
     private int tailIndex;
     private int size;
-    private int headInitial;
-    private int tailInitial;
     private double usageFactor = 0.25;
 
     /** Creates an empty list. */
@@ -182,4 +182,37 @@ public class ArrayDeque<T> {
         }
         return itemRemoved;
     }
+
+    @Override
+    public Iterator<T> iterator() {
+        return new ArrayDequeIterator();
+    }
+
+    private class ArrayDequeIterator implements Iterator<T> {
+        // Implement the Iterator methods (hasNext, next, remove) here...
+
+        private int currentIndex = headIndex - 1;
+
+
+        @Override
+        public boolean hasNext() {
+            int nextIndex = (currentIndex + 1 + items.length) % items.length;
+            return items[nextIndex] != null; //circular implementation
+        }
+
+        @Override
+        public T next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            int nextIndex = (currentIndex + 1 + items.length) % items.length;
+            T item = items[nextIndex];
+            currentIndex = currentIndex + 1;
+            return item;
+        }
+
+    }
+
+
+
 }
