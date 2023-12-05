@@ -70,7 +70,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         }
     }
 
-    public void printInternal() {
+    private void printInternal() {
         System.out.print('|');
         for (int i = 0; i < items.length; i++) {
             System.out.print(i);
@@ -89,14 +89,16 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         }
         System.out.println();
     }
-    public void resize(double factor) {
+    private void resize(double factor) {
         T[] newItems = (T[]) new Object[(int) Math.round(items.length * factor)];
         int midPoint = newItems.length / 2;
         int halfSize = size / 2;
 
         if (headIndex > tailIndex) {
-            System.arraycopy(items, headIndex, newItems, midPoint - halfSize + 1, items.length - headIndex);
-            System.arraycopy(items, 0, newItems, midPoint - halfSize + 1 + items.length - headIndex, tailIndex + 1);
+            System.arraycopy(items, headIndex, newItems, midPoint - halfSize + 1,
+                    items.length - headIndex);
+            System.arraycopy(items, 0, newItems,
+                    midPoint - halfSize + 1 + items.length - headIndex, tailIndex + 1);
         } else {
             System.arraycopy(items, headIndex, newItems, midPoint - halfSize + 1, size);
         }
