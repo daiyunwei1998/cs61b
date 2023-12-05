@@ -1,16 +1,16 @@
 package deque;
 import java.util.Comparator;
 
-public class MaxArrayDeque<T extends Comparable<T>> extends ArrayDeque<T>{
+public class MaxArrayDeque<T> extends ArrayDeque<T> {
 
     private Comparator<T> c;
-    public MaxArrayDeque(Comparator<T> c){
+    public MaxArrayDeque(Comparator<T> c) {
         this.c = c;
     }
-    public T max(){
-        if(this.isEmpty()){
+    public T max() {
+        if (this.isEmpty()) {
             return null;
-        }else{
+        } else {
             T max = this.get(0);
             for (T element : this) {
                 if (c.compare(element, max) > 0) {
@@ -20,13 +20,13 @@ public class MaxArrayDeque<T extends Comparable<T>> extends ArrayDeque<T>{
             return max;
         }
     }
-    public T max(Comparator<T> c){
-        if(this.isEmpty()){
+    public T max(Comparator<T> comparator) {
+        if (this.isEmpty()) {
             return null;
-        }else{
+        } else {
             T max = this.get(0);
             for (T element : this) {
-                if (c.compare(element, max) > 0) {
+                if (comparator.compare(element, max) > 0) {
                     max = element;
                 }
             }
