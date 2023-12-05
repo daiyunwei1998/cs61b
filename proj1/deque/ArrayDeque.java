@@ -167,6 +167,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         T itemRemoved = items[tailIndex];
         items[tailIndex] = null;
         tailIndex -= 1;
+        size -= 1;
         if (tailIndex < 0) {
             // go to the very end
             tailIndex = items.length - 1;
