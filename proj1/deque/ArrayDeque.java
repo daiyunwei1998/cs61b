@@ -70,7 +70,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         }
     }
 
-    public void printInternal() {
+    private void printInternal() {
         System.out.print('|');
         for (int i = 0; i < items.length; i++) {
             System.out.print(i);
