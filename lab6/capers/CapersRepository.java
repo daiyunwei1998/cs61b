@@ -48,6 +48,7 @@ public class CapersRepository {
         if (f.exists()) {
             String contents = readContentsAsString(f);
             writeContents(f, contents, text, "\n");
+            System.out.print(contents);
             System.out.println(text);
         } else {
             try {
