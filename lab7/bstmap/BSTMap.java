@@ -22,10 +22,8 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
 
 
     public void clear() {
-        root.key = null;
-        root.value = null;
-        root.left = null;
-        root.right = null;
+        root = null;
+        size = 0;
     }
 
     @Override
@@ -102,7 +100,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         return Node;
     }
 
-    public Set keySet() {
+    public Set<K> keySet() {
         throw new UnsupportedOperationException("This operation is not supported");
     }
 
@@ -115,9 +113,11 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
     public V remove(K key, V value) {
         return null;
     }
+    public void printInOrder() {
+        throw new UnsupportedOperationException("This operation is not supported");
+    }
 
-
-    public Iterator iterator() {
+    public Iterator<K> iterator() {
         throw new UnsupportedOperationException("This operation is not supported");
     }
 
