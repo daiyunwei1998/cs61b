@@ -61,7 +61,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
      * @param initialSize initial size of backing array
      * @param maxLoad maximum load factor
      */
-    public MyHashMap(int initialSize, double maxLoad ) {
+    public MyHashMap(int initialSize, double maxLoad) {
         this.loadFactor = maxLoad;
         this.size = initialSize;
         this.load = 0;
@@ -111,7 +111,6 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
         return null;
     }
 
-    // TODO: Implement the methods of the Map61B Interface below
     // Your code won't compile until you do so!
 
     @Override
@@ -131,9 +130,11 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
 
     @Override
     public V get(K key) {
-        if (!keys.contains(key)) {return null;}
+        if (!keys.contains(key)) {
+            return null;
+        }
 
-        int index = Math.floorMod(key.hashCode(),this.size);
+        int index = Math.floorMod(key.hashCode(), this.size);
         for (Node item:this.buckets[index]) {
             if (item.key.equals(key)) {
                 return item.value;
@@ -151,7 +152,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     public void put(K key, V value) {
         // check if already in
         if (containsKey(key)) {
-            int index = Math.floorMod(key.hashCode(),this.size);
+            int index = Math.floorMod(key.hashCode(), this.size);
             for (Node item:this.buckets[index]) {
                 if (item.key.equals(key)) {
                     item.value = value;
@@ -191,14 +192,14 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
 
     @Override
     public Set<K> keySet() {
-       return this.keys;
+        return this.keys;
     }
 
     @Override
     public V remove(K key) {
 
         if (containsKey(key)) {
-            int index = Math.floorMod(key.hashCode(),this.size);
+            int index = Math.floorMod(key.hashCode(), this.size);
 
             Iterator<Node> iterator = this.buckets[index].iterator();
             while (iterator.hasNext()) {
@@ -227,7 +228,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
         return new HashMapIterator();
     }
 
-    private class HashMapIterator implements Iterator <K> {
+    private class HashMapIterator implements Iterator<K> {
         private Iterator<K> keysIterator = keys.iterator();
 
         @Override
