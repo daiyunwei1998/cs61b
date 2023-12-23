@@ -196,7 +196,25 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
 
     @Override
     public V remove(K key) {
-        throw new UnsupportedOperationException();
+
+        if (containsKey(key)) {
+            int index = Math.floorMod(key.hashCode(),this.size);
+
+            Iterator<Node> iterator = this.buckets[index].iterator();
+            while (iterator.hasNext()) {
+                Node currentNode = iterator.next();
+
+                // Check if the current value matches the value to be removed
+                if (currentNode.key.equals(key)) {
+                    V value = currentNode.value;
+                    // Remove the current element using the iterator's remove method
+                    iterator.remove();
+                    this.keys.remove(key);
+                    return value;
+                }
+            }
+        }
+        return null;
     }
 
     @Override
