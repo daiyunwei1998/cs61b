@@ -21,6 +21,41 @@ public class Commit {
 
     /** The message of this Commit. */
     private String message;
+    private Date timestamp;
+    // every commit point to its parent
+    private Commit parent;
 
     /* TODO: fill in the rest of this class. */
+    public Commit(String message, Commit parent) {
+        if (!Utils.join(Repository.CWD, ".gitlet").exists()) {
+            System.out.println("Not in an initialized Gitlet directory.");
+            return;
+        }
+
+        this.message = message;
+        this.parent = parent;
+        if (this.parent == null) {
+            this.timestamp = new Date(0);
+        } else {
+            this.timestamp = new Date();
+        }
+    }
+
+    public String getMessage() {
+        return this.message;
+    }
+
+    public Date getTimestamp() {
+        return this.timestamp;
+    }
+
+    public Commit getParent() {
+        return this.parent;
+    }
+
+    public static void main(String[] args) {
+        //test only
+        Commit c1 = new Commit("test",null);
+        Commit c2 = new Commit("test",c1);
+    }
 }
