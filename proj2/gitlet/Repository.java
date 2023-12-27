@@ -145,7 +145,7 @@ public class Repository {
 
     public static void log() {
         Commit c = Repository.getHEADCommit();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss Z yyyy");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z");
 
         while (!"".equals(c.getParentID())) {
             String formattedDate = dateFormat.format(c.getTimestamp());
@@ -175,7 +175,6 @@ public class Repository {
 
 
     public static void main(String[] args) {
-        init();
-        log();
+
     }
 }
