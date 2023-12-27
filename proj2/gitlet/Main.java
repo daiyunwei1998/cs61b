@@ -23,23 +23,27 @@ public class Main {
         switch(firstArg) {
             case "init":
                 Repository.init();
+                break;
             case "add":
                 if (args.length == 2) {
                     Repository.add(args[1]);
                 } else {
                     System.out.println("Incorrect operands.");
                 }
-
-
-                // TODO: handle the `add [filename]` command
                 break;
-            // TODO: FILL THE REST IN
             case "commit":
-
-                // TODO: add commit command
+                if (args.length >= 2) {
+                    Repository.commit(args[1]);
+                } else {
+                    System.out.println("Please enter a commit message.");
+                }
                 break;
             case "log":
-                //TODO : log command
+                if (args.length == 1) {
+                    Repository.log();
+                } else {
+                    System.out.println("Incorrect operands.");
+                }
                 break;
             case "global-log":
                 //TODO global - log

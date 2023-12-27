@@ -13,11 +13,15 @@ public class blob implements Serializable{
         this.contents = readContents(file);
     }
 
+    public String getSHA1() {
+        return sha1(this.contents);
+    }
+
+    public String getFileName() { return this.fileName; }
+
     /* Serialize the blob to a file*/
-    public void toFile(File targetDir) {
-        String fileName = sha1(this.contents);
-        File outFile = Utils.join(targetDir, fileName);
-        writeObject(outFile, this);
+    public void toFile(File filePath) {
+        writeObject(filePath, this);
     }
 
     /* load a file*/

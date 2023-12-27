@@ -2,7 +2,14 @@ package gitlet;
 
 // TODO: any imports you need here
 
-import java.util.Date; // TODO: You'll likely use this in this class
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import static gitlet.Utils.readObject;
 
 /** Represents a gitlet commit object.
  *  TODO: It's a good idea to give a description here of what else this Class
@@ -10,7 +17,7 @@ import java.util.Date; // TODO: You'll likely use this in this class
  *
  *  @author TODO
  */
-public class Commit {
+public class Commit implements Serializable {
     /**
      * TODO: add instance variables here.
      *
@@ -22,8 +29,15 @@ public class Commit {
     /** The message of this Commit. */
     private String message;
     private Date timestamp;
-    // every commit point to its parent
-    private Commit parent;
+
+    /** every commit point to its parent
+     use string to avoid serializing pointers */
+    private String parentID;
+
+    /** the hash of its tree object */
+    private HashMap<String, String> tree;
+
+    private String sha1;
 
     /* TODO: fill in the rest of this class. */
     public Commit(String message, Commit parent) {
@@ -33,12 +47,38 @@ public class Commit {
         }
 
         this.message = message;
-        this.parent = parent;
-        if (this.parent == null) {
+        this.tree = new HashMap<>();
+
+        if (parent == null) {
+            // initial commit
+            this.parentID = "";
             this.timestamp = new Date(0);
         } else {
+            this.parentID = parent.getSHA1();
             this.timestamp = new Date();
+            // copy the parent snapshot
+            this.tree = parent.tree;
         }
+        this.updateSHA1();
+        this.toFile();
+    }
+
+    public void updateSHA1() {
+        StringBuilder treeContent = new StringBuilder();
+        for (Map.Entry<String, String> entry : tree.entrySet()) {
+            treeContent.append(entry.getKey())
+                    .append(entry.getValue());
+        }
+        // Concatenate relevant information (message, timestamp, parent SHA-1)
+        String info = this.message +
+                this.timestamp.toString() +
+                (this.parentID != null ? this.parentID: "") +
+                treeContent.toString();
+        this.sha1 = Utils.sha1(info);
+    }
+
+    public String getSHA1() {
+        return this.sha1;
     }
 
     public String getMessage() {
@@ -49,13 +89,45 @@ public class Commit {
         return this.timestamp;
     }
 
-    public Commit getParent() {
-        return this.parent;
+    public String getParentID() {
+        return this.parentID;
     }
 
+    public void addFIle(blob b) {
+        // update tree object
+        tree.put(b.getFileName(),b.getSHA1());
+        this.updateSHA1();
+    }
+
+    public void removeFIle(blob b) {
+        // remove an object from tree
+        tree.remove(b.getFileName());
+        this.updateSHA1();
+    }
+    public void toFile() {
+        // make a commit object
+        File newCommitObject = Utils.join(Repository.COMMITS_DIR, this.getSHA1());
+        try {
+            // Create a new file
+            newCommitObject.createNewFile();
+            Utils.writeObject(newCommitObject, this);
+        } catch (IOException e) {
+            // Handle potential IOException (e.g., permission issues)
+            e.printStackTrace();
+        }
+    }
+
+    public static Commit fromFile(File commitFile) {
+        Commit c = readObject(commitFile, Commit.class);
+        return c;
+    }
+
+    /** get hash of a file in tree*/
+    public String getFileID(File file) {
+        String fileName = file.getName();
+        return tree.get(fileName);
+    }
     public static void main(String[] args) {
-        //test only
-        Commit c1 = new Commit("test",null);
-        Commit c2 = new Commit("test",c1);
+
     }
 }
