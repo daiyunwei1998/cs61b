@@ -3,7 +3,7 @@ package gitlet;
 //todo delete import edu.princeton.cs.algs4.StdOut;
 import java.io.File;
 import java.io.IOException;
-import java.util.Formatter;
+import java.text.SimpleDateFormat;
 import static gitlet.Utils.*;
 
 // TODO: any imports you need here
@@ -145,11 +145,10 @@ public class Repository {
 
     public static void log() {
         Commit c = Repository.getHEADCommit();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss Z yyyy");
 
         while (!"".equals(c.getParentID())) {
-            Formatter formatter = new Formatter();
-            String formattedDate = formatter.format("%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS %1$tz", c.getTimestamp()).toString();
-
+            String formattedDate = dateFormat.format(c.getTimestamp());
             System.out.printf("===\ncommit %s\nDate: %s\n%s\n\n",
                     c.getSHA1(),
                     formattedDate,
@@ -167,9 +166,10 @@ public class Repository {
         }
 
         // Print information for the initial commit
+        String formattedDate = dateFormat.format(c.getTimestamp());
         System.out.printf("===\ncommit %s\nDate: %s\n%s\n\n",
                 c.getSHA1(),
-                c.getTimestamp(),
+                formattedDate,
                 c.getMessage());
     }
 
