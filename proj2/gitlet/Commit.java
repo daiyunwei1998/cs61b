@@ -1,7 +1,5 @@
 package gitlet;
 
-// TODO: any imports you need here
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -15,7 +13,6 @@ import static gitlet.Utils.readObject;
  *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
  *
- *  @author TODO
  */
 public class Commit implements Serializable {
     /**
@@ -60,7 +57,6 @@ public class Commit implements Serializable {
             this.tree = parent.tree;
         }
         this.updateSHA1();
-        this.toFile();
     }
 
     public void updateSHA1() {
@@ -93,7 +89,7 @@ public class Commit implements Serializable {
         return this.parentID;
     }
 
-    public void addFIle(blob b) {
+    public void addFile(blob b) {
         // update tree object
         tree.put(b.getFileName(),b.getSHA1());
         this.updateSHA1();
@@ -104,9 +100,24 @@ public class Commit implements Serializable {
         tree.remove(b.getFileName());
         this.updateSHA1();
     }
+
+    public boolean containsFile(String fileName) {
+        return tree.containsKey(fileName);
+    }
+    public blob getBlob(String fileName) {
+        /* given filename returns the blob file*/
+        if (!containsFile(fileName)) {
+            return null;
+        }
+        String blobID = tree.get(fileName);
+        File blobFile = Utils.join(Repository.BLOBS_DIR,blobID);
+        return blob.readBlob(blobFile);
+    }
+
     public void toFile() {
         // make a commit object
         File newCommitObject = Utils.join(Repository.COMMITS_DIR, this.getSHA1());
+
         try {
             // Create a new file
             newCommitObject.createNewFile();
@@ -128,6 +139,5 @@ public class Commit implements Serializable {
         return tree.get(fileName);
     }
     public static void main(String[] args) {
-
     }
 }

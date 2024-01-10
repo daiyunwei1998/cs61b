@@ -1,16 +1,17 @@
 package gitlet;
 import java.io.File;
 import java.io.Serializable;
+import java.sql.Blob;
 
 import static gitlet.Utils.*;
 
 public class blob implements Serializable{
     private String fileName;
-    private byte[] contents;
+    private String contents;
 
     public blob(File file) {
         this.fileName = file.getName();
-        this.contents = readContents(file);
+        this.contents = readContentsAsString(file);
     }
 
     public String getSHA1() {
@@ -18,13 +19,19 @@ public class blob implements Serializable{
     }
 
     public String getFileName() { return this.fileName; }
+    public String getContent() {
+        return this.contents;
+    }
 
     /* Serialize the blob to a file*/
     public void toFile(File filePath) {
         writeObject(filePath, this);
     }
 
-    /* load a file*/
-    //todo
+    /* load a file */
+    public static blob readBlob(File filePath) {
+        blob b = readObject(filePath, blob.class);
+        return b;
+    }
 
 }

@@ -4,6 +4,8 @@ package gitlet;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Objects;
+
 import static gitlet.Utils.*;
 
 // TODO: any imports you need here
@@ -61,11 +63,10 @@ public class Repository {
 
         // initial commit
         Commit initial = new Commit("initial commit", null);
+        Repository.commit("initial commit");
 
-        //change HEAD to this initial commit
-        updateHEAD(initial.getSHA1());
-
-        //TODO It will have a single branch: master, which initially points to this initial commit, and master will be the current branch.
+        //TODO It will have a single branch: master, which initially points to this initial commit,
+        // and master will be the current branch.
     }
 
     public static void add(String fileName) {
@@ -89,7 +90,7 @@ public class Repository {
 
         /** check current version */
         Commit headCommit = getHEADCommit();
-        if (headCommit.getFileID(saveToFile) == b.getSHA1()) {
+        if (Objects.equals(headCommit.getFileID(saveToFile), b.getSHA1())) {
             // if file is the same as in current commit
             // remove it from toAdd (if any), do nothing
             if (saveToFile.exists()) {
@@ -109,34 +110,45 @@ public class Repository {
         return Utils.readContentsAsString(HEAD);
     }
     public static Commit getHEADCommit() {
+        if (getHEADID().isEmpty()) {
+            return null;
+        }
         File headCommit = Utils.join(Repository.COMMITS_DIR,getHEADID());
         return readObject(headCommit,Commit.class);
     }
 
     public static void commit(String message) {
+        Commit HEADCommit = getHEADCommit();
+
         // make a new commit object
-        Commit newCommit = new Commit(message, getHEADCommit());
+        Commit newCommit = new Commit(message, HEADCommit);
+        if (HEADCommit != null) {
+            File[] filesToAdd = ADD_DIR.listFiles();
+            File[] filesToRemove = REMOVE_DIR.listFiles();
 
-        File[] filesToAdd = ADD_DIR.listFiles();
-        File[] filesToRemove = REMOVE_DIR.listFiles();
+            if (filesToAdd.length ==0 & filesToRemove.length == 0) {
+                System.out.println("No changes added to the commit.");
+            }
 
-        if (filesToAdd.length ==0 & filesToRemove.length == 0) {
-            System.out.println("No changes added to the commit.");
+            // add files
+            for (File file : filesToAdd) {
+                blob b = blob.readBlob(file);
+                newCommit.addFile(b);
+                File newPath = Utils.join(BLOBS_DIR,b.getSHA1());
+                b.toFile(newPath);
+                file.delete();
+            }
+
+            // remove files
+            for (File file : filesToRemove) {
+                blob b =  blob.readBlob(file);
+                newCommit.removeFIle(b);
+                File newPath = Utils.join(BLOBS_DIR,b.getSHA1());
+                b.toFile(newPath);
+                file.delete();
+            }
         }
 
-        // add files
-        for (File file : filesToAdd) {
-            blob b = new blob(file);
-            newCommit.addFIle(b);
-            file.delete();
-        }
-
-        // remove files
-        for (File file : filesToRemove) {
-            blob b = new blob(file);
-            newCommit.removeFIle(b);
-            file.delete();
-        }
         // save new commit
         newCommit.toFile();
         // update HEAD
@@ -173,6 +185,69 @@ public class Repository {
                 c.getMessage());
     }
 
+    public static void checkout(String fileName) {
+    /*    Takes the version of the file as it exists in the head commit and puts
+        it in the working directory, overwriting the version of the file that’s
+        already there if there is one. The new version of the file is not staged.*/
+
+        // Check if filename exists in HEAD commit
+        String HEADCommitID = readContentsAsString(HEAD);
+        Commit HEADCommit = Commit.fromFile(Utils.join(COMMITS_DIR,HEADCommitID));
+        if (!HEADCommit.containsFile(fileName)) {
+            System.out.println("File does not exist in that commit.");
+            return;
+        }
+        // read the blob
+        blob b = HEADCommit.getBlob(fileName);
+        // make new file
+        File f = Utils.join(CWD,fileName);
+        // overwrite with snapshot version
+        writeContents(f,b.getContent());
+    }
+
+    public static void checkout(String commitID, String fileName) {
+    /*    Takes the version of the file as it exists in the commit with the given id,
+    and puts it in the working directory, overwriting the version of the file that’s
+    already there if there is one. The new version of the file is not staged.*/
+
+        File commitFile = null;
+
+        // Check if commits id is real
+        if (commitID.length() >= 40) {
+            commitFile = Utils.join(COMMITS_DIR,commitID);
+            if (!commitFile.exists()) {
+                System.out.println("No commit with that id exists.");
+                return;
+            }
+        }
+
+        // abbreviate commits
+        if (commitID.length() < 40) {
+            File[] filesToCheck = COMMITS_DIR.listFiles();
+            for (File f:filesToCheck) {
+                if (f.getName().startsWith(commitID)) {
+                    commitFile = f;
+                }
+            }
+            if (commitFile == null) {
+                System.out.println("No commit with that id exists.");
+                return;
+            }
+        }
+
+        // Check if filename exists in commit
+        Commit c = Commit.fromFile(commitFile);
+        if (!c.containsFile(fileName)) {
+            System.out.println("File does not exist in that commit.");
+            return;
+        }
+        // read the blob
+        blob b = c.getBlob(fileName);
+        // make new file
+        File f = Utils.join(CWD,fileName);
+        // overwrite with snapshot version
+        writeContents(f,b.getContent());
+    }
 
     public static void main(String[] args) {
 

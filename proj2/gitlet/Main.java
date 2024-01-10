@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.File;
+import java.util.Objects;
 
 
 /** Driver class for Gitlet, a subset of the Git version-control system.
@@ -19,6 +20,7 @@ public class Main {
         // TODO: what if args is empty?
         // TODO : all methods should check if input args if valid (in terms of number)
         // TODO : check if in git repo
+        // TODO maybe check if not in a git repo before below?
         String firstArg = args[0];
         switch(firstArg) {
             case "init":
@@ -56,6 +58,18 @@ public class Main {
                 break;
             case "checkout":
                 //TODO checkout
+                if (args.length == 3 &Objects.equals(args[1], "--")) {
+                    // case 1
+                    String filename = args[2];
+                    Repository.checkout(filename);
+                }
+                if (args.length == 4 & Objects.equals(args[2], "--")) {
+                    // case 2
+                    String commitID = args[1];
+                    String fileName = args[3];
+                    Repository.checkout(commitID, fileName);
+
+                }
                 break;
             case "branch":
                 //TODO branch
