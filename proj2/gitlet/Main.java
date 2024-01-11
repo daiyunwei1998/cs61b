@@ -35,6 +35,7 @@ public class Main {
                 break;
             case "commit":
                 if (args.length >= 2) {
+                    // why >= 2 though? why not == 2
                     Repository.commit(args[1]);
                 } else {
                     System.out.println("Please enter a commit message.");
@@ -48,13 +49,17 @@ public class Main {
                 }
                 break;
             case "global-log":
-                //TODO global - log
+                Repository.globalLog();
                 break;
             case "find":
-                //TODO find
+                if (args.length != 2) {
+                    System.out.println("Incorrect operands.");
+                } else {
+                    Repository.find(args[1]);
+                }
                 break;
             case "status":
-                //TODO status
+                Repository.status();
                 break;
             case "checkout":
                 //TODO checkout

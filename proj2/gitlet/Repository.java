@@ -1,10 +1,13 @@
 package gitlet;
 
 //todo delete import edu.princeton.cs.algs4.StdOut;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Objects;
+import java.util.PriorityQueue;
 
 import static gitlet.Utils.*;
 
@@ -35,6 +38,10 @@ public class Repository {
     public static final File COMMITS_DIR = Utils.join(GITLET_DIR, "commits");
     public static final File BLOBS_DIR = Utils.join(GITLET_DIR, "blobs");
     public static final File HEAD = Utils.join(GITLET_DIR, "HEAD");
+    public static final File ADD_INDEX = Utils.join(ADD_DIR, "INDEX");
+    public static final File REMOVE_INDEX = Utils.join(REMOVE_DIR, "INDEX");
+
+
 
     /* TODO: fill in the rest of this class. */
     public static void init() {
@@ -56,6 +63,16 @@ public class Repository {
         try {
             // Create a new file
             HEAD.createNewFile();
+        } catch (IOException e) {
+            // Handle potential IOException (e.g., permission issues)
+            e.printStackTrace();
+        }
+
+        // Create index for staging area (add and remove)
+        try {
+            // Create a new file
+            ADD_INDEX.createNewFile();
+            REMOVE_INDEX.createNewFile();
         } catch (IOException e) {
             // Handle potential IOException (e.g., permission issues)
             e.printStackTrace();
@@ -91,8 +108,8 @@ public class Repository {
         /** check current version */
         Commit headCommit = getHEADCommit();
         if (Objects.equals(headCommit.getFileID(saveToFile), b.getSHA1())) {
-            // if file is the same as in current commit
-            // remove it from toAdd (if any), do nothing
+          /*   if file is the same as in current commit
+             remove it from toAdd (if any), do nothing*/
             if (saveToFile.exists()) {
                 saveToFile.delete();
             }
@@ -183,6 +200,82 @@ public class Repository {
                 c.getSHA1(),
                 formattedDate,
                 c.getMessage());
+    }
+
+    public static void globalLog() {
+        File[] commitFiles = COMMITS_DIR.listFiles();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z");
+
+        /* Though it will never be null since there are always an initial commit*/
+        assert commitFiles != null;
+        for (File commitFile:commitFiles) {
+            Commit c = Commit.fromFile(commitFile);
+            String formattedDate = dateFormat.format(c.getTimestamp());
+            System.out.printf("===\ncommit %s\nDate: %s\n%s\n\n",
+                    c.getSHA1(),
+                    formattedDate,
+                    c.getMessage());
+        }
+    }
+
+    public static void find(String message) {
+        File[] commitFiles = COMMITS_DIR.listFiles();
+        assert commitFiles != null;
+        boolean found = false;
+        for (File commitFile:commitFiles) {
+            Commit c = Commit.fromFile(commitFile);
+            if (Objects.equals(c.getMessage(), message)) {
+                System.out.println(c.getSHA1());
+                found = true;
+            }
+        }
+        if (!found) {
+            System.out.println("Found no commit with that message.");
+        }
+    }
+
+    public static void status() {
+        /* Printer PQ : creating a PQ that
+        * prints the added contents in lexicographic order*/
+        PriorityQueue<String> Printer = new PriorityQueue<>();
+
+        // TODO list the branches
+        System.out.println("=== Branches ===");
+        System.out.println();
+        // list the staged files
+        System.out.println("=== Staged Files ===");
+        File[] stagedFiles = ADD_DIR.listFiles();
+        if (stagedFiles != null) {
+            for (File f:stagedFiles) {
+                blob b = blob.readBlob(f);
+                Printer.add(b.getFileName());
+            }
+        }
+        while (!Printer.isEmpty()) {
+            String info = Printer.remove();
+            System.out.println(info);
+        }
+        System.out.println();
+        // list the removed files
+        System.out.println("=== Removed Files ===");
+        File[] removedFiles = REMOVE_DIR.listFiles();
+        if (removedFiles != null) {
+            for (File f:removedFiles) {
+                blob b = blob.readBlob(f);
+                Printer.add(b.getFileName());
+            }
+        }
+        while (!Printer.isEmpty()) {
+            String info = Printer.remove();
+            System.out.println(info);
+        }
+        System.out.println();
+        // TODO list the modified files
+        System.out.println("=== Modifications Not Staged For Commit ===");
+        System.out.println();
+        // TODO list the untracked files
+        System.out.println("=== Untracked Files ===");
+        System.out.println();
     }
 
     public static void checkout(String fileName) {
