@@ -4,6 +4,7 @@ package gitlet;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Objects;
@@ -41,7 +42,52 @@ public class Repository {
     public static final File ADD_INDEX = Utils.join(ADD_DIR, "INDEX");
     public static final File REMOVE_INDEX = Utils.join(REMOVE_DIR, "INDEX");
 
+    private static class Index implements Serializable {
+        private PriorityQueue<Entry> entries;
 
+        private static class Entry {
+            private String fileName;
+            private String blobName;
+            private Entry(String fileName, String blobName) {
+                this.fileName = fileName;
+                this.blobName = blobName;
+            }
+
+            private String getFileName() {
+                return this.fileName;
+            }
+
+            private String getBlobName() {
+                return this.blobName;
+            }
+        }
+
+        private Index() {
+            this.entries = new PriorityQueue<Entry>();
+        }
+
+        private static Index fromFile(File fileName) {
+            return Utils.readObject(fileName,Index.class);
+        }
+
+        private void toFile(File fileName) {
+            writeObject(fileName, this);
+
+        }
+        private void addEntry(String filename, String blobName) {
+            this.entries.add(new Entry(filename, blobName));
+        }
+        private Entry getEntry() {
+            return this.entries.remove();
+        }
+        private int size() {
+            return this.entries.size();
+        }
+        private boolean isEmpty() {
+            return this.entries.isEmpty();
+        }
+
+    }
 
     /* TODO: fill in the rest of this class. */
     public static void init() {
@@ -69,14 +115,10 @@ public class Repository {
         }
 
         // Create index for staging area (add and remove)
-        try {
-            // Create a new file
-            ADD_INDEX.createNewFile();
-            REMOVE_INDEX.createNewFile();
-        } catch (IOException e) {
-            // Handle potential IOException (e.g., permission issues)
-            e.printStackTrace();
-        }
+        Index AddIndex = new Index();
+        Index RemoveIndex = new Index();
+        AddIndex.toFile(ADD_INDEX);
+        RemoveIndex.toFile(REMOVE_INDEX);
 
         // initial commit
         Commit initial = new Commit("initial commit", null);
@@ -100,8 +142,12 @@ public class Repository {
             return;
         }
 
+        // get INDEX file
+        Index AddIndex = Index.fromFile(ADD_INDEX);
+
         // make a new blob
         blob b = new blob(f);
+
         // get hash (filename of the blob)
         File saveToFile = Utils.join(ADD_DIR, b.getSHA1());
 
@@ -117,6 +163,7 @@ public class Repository {
         } else {
             // first time addedd or different version
             b.toFile(saveToFile);
+            AddIndex.addEntry(f.getName(), b.getFileName());
         }
     }
 
@@ -140,14 +187,28 @@ public class Repository {
         // make a new commit object
         Commit newCommit = new Commit(message, HEADCommit);
         if (HEADCommit != null) {
-            File[] filesToAdd = ADD_DIR.listFiles();
-            File[] filesToRemove = REMOVE_DIR.listFiles();
+            // read indexes
+            Index AddIndex = Index.fromFile(ADD_INDEX);
+            Index RemoveIndex = Index.fromFile(REMOVE_INDEX);
 
-            if (filesToAdd.length ==0 & filesToRemove.length == 0) {
+            // check if nothing changes
+            if (AddIndex.size() ==0 & RemoveIndex.size() == 0) {
                 System.out.println("No changes added to the commit.");
             }
 
             // add files
+            while (!AddIndex.isEmpty()) {
+                Index.Entry e = AddIndex.getEntry();
+                newCommit.addFile(e.getFileName(), e.getBlobName());
+                File oldFile = Utils.join(ADD_DIR, e.getBlobName());
+                File newFile = Utils.join(BLOBS_DIR,e.getBlobName());
+                boolean status = oldFile.renameTo(newFile);
+                if (!status) {
+                    System.out.println("Commiting staged files unsuccessfully");
+                }
+            }
+
+
             for (File file : filesToAdd) {
                 blob b = blob.readBlob(file);
                 newCommit.addFile(b);

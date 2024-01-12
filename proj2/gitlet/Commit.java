@@ -89,15 +89,15 @@ public class Commit implements Serializable {
         return this.parentID;
     }
 
-    public void addFile(blob b) {
+    public void addFile(String fileName, String blobName) {
         // update tree object
-        tree.put(b.getFileName(),b.getSHA1());
+        tree.put(fileName, blobName);
         this.updateSHA1();
     }
 
-    public void removeFIle(blob b) {
+    public void removeFIle(String fileName, String blobName) {
         // remove an object from tree
-        tree.remove(b.getFileName());
+        tree.put(fileName, blobName);
         this.updateSHA1();
     }
 
