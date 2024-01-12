@@ -134,8 +134,7 @@ public class Commit implements Serializable {
     }
 
     /** get hash of a file in tree*/
-    public String getFileID(File file) {
-        String fileName = file.getName();
+    public String getFileVersion(String fileName) {
         return tree.get(fileName);
     }
     public static void main(String[] args) {

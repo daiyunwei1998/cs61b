@@ -6,9 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
-import java.util.Objects;
-import java.util.PriorityQueue;
+import java.util.*;
 
 import static gitlet.Utils.*;
 
@@ -43,27 +41,11 @@ public class Repository {
     public static final File REMOVE_INDEX = Utils.join(REMOVE_DIR, "INDEX");
 
     private static class Index implements Serializable {
-        private PriorityQueue<Entry> entries;
+        private HashMap<String, String> entries;
 
-        private static class Entry {
-            private String fileName;
-            private String blobName;
-            private Entry(String fileName, String blobName) {
-                this.fileName = fileName;
-                this.blobName = blobName;
-            }
-
-            private String getFileName() {
-                return this.fileName;
-            }
-
-            private String getBlobName() {
-                return this.blobName;
-            }
-        }
 
         private Index() {
-            this.entries = new PriorityQueue<Entry>();
+            this.entries = new HashMap<String, String>();
         }
 
         private static Index fromFile(File fileName) {
@@ -74,11 +56,18 @@ public class Repository {
             writeObject(fileName, this);
 
         }
-        private void addEntry(String filename, String blobName) {
-            this.entries.add(new Entry(filename, blobName));
+        private void addEntry(String fileName, String blobName) {
+            this.entries.put(fileName, blobName);
         }
-        private Entry getEntry() {
-            return this.entries.remove();
+        private void removeEntry(String fileName) {
+            this.entries.remove(fileName);
+        }
+        private String get(String fileName) {
+            return this.entries.get(fileName);
+        }
+
+        private HashMap<String, String> getEntries(){
+            return this.entries;
         }
         private int size() {
             return this.entries.size();
@@ -143,7 +132,7 @@ public class Repository {
         }
 
         // get INDEX file
-        Index AddIndex = Index.fromFile(ADD_INDEX);
+        Index addIndex = Index.fromFile(ADD_INDEX);
 
         // make a new blob
         blob b = new blob(f);
@@ -151,19 +140,27 @@ public class Repository {
         // get hash (filename of the blob)
         File saveToFile = Utils.join(ADD_DIR, b.getSHA1());
 
+
         /** check current version */
+        // todo test this
         Commit headCommit = getHEADCommit();
-        if (Objects.equals(headCommit.getFileID(saveToFile), b.getSHA1())) {
+        if (Objects.equals(headCommit.getFileVersion(fileName), b.getSHA1())) {
           /*   if file is the same as in current commit
              remove it from toAdd (if any), do nothing*/
-            if (saveToFile.exists()) {
+            if (addIndex.getEntries().containsKey(fileName)) {
+                addIndex.removeEntry(fileName);
+            }
+            if (!addIndex.getEntries().containsValue(b.getSHA1()) &&
+            saveToFile.exists()) {
                 saveToFile.delete();
+                // remove blob from staging area
             }
             return;
         } else {
             // first time addedd or different version
             b.toFile(saveToFile);
-            AddIndex.addEntry(f.getName(), b.getFileName());
+            addIndex.addEntry(f.getName(), b.getSHA1());
+            addIndex.toFile(ADD_INDEX);
         }
     }
 
@@ -188,43 +185,42 @@ public class Repository {
         Commit newCommit = new Commit(message, HEADCommit);
         if (HEADCommit != null) {
             // read indexes
-            Index AddIndex = Index.fromFile(ADD_INDEX);
-            Index RemoveIndex = Index.fromFile(REMOVE_INDEX);
+            Index addIndex = Index.fromFile(ADD_INDEX);
+            Index removeIndex = Index.fromFile(REMOVE_INDEX);
 
             // check if nothing changes
-            if (AddIndex.size() ==0 & RemoveIndex.size() == 0) {
+            if (addIndex.size() ==0 & removeIndex.size() == 0) {
                 System.out.println("No changes added to the commit.");
             }
 
             // add files
-            while (!AddIndex.isEmpty()) {
-                Index.Entry e = AddIndex.getEntry();
-                newCommit.addFile(e.getFileName(), e.getBlobName());
-                File oldFile = Utils.join(ADD_DIR, e.getBlobName());
-                File newFile = Utils.join(BLOBS_DIR,e.getBlobName());
+            Set<String> filesToAdd = new HashSet<>();
+
+            Iterator<String> it = addIndex.getEntries().keySet().iterator();
+            while (it.hasNext()) {
+                String key = it.next();
+                filesToAdd.add(addIndex.get(key));
+                newCommit.addFile(key,addIndex.get(key));
+                it.remove();
+            }
+            addIndex.toFile(ADD_INDEX);
+
+            for (String blobName:filesToAdd) {
+                File oldFile = Utils.join(ADD_DIR, blobName);
+                File newFile = Utils.join(BLOBS_DIR,blobName);
                 boolean status = oldFile.renameTo(newFile);
                 if (!status) {
                     System.out.println("Commiting staged files unsuccessfully");
                 }
             }
 
-
-            for (File file : filesToAdd) {
-                blob b = blob.readBlob(file);
-                newCommit.addFile(b);
-                File newPath = Utils.join(BLOBS_DIR,b.getSHA1());
-                b.toFile(newPath);
-                file.delete();
-            }
-
             // remove files
-            for (File file : filesToRemove) {
-                blob b =  blob.readBlob(file);
-                newCommit.removeFIle(b);
-                File newPath = Utils.join(BLOBS_DIR,b.getSHA1());
-                b.toFile(newPath);
-                file.delete();
+            while (!removeIndex.isEmpty()) {
+                // todo remove during commit (hint: remove from index and get rid of blob in staging area)
+
+
             }
+
         }
 
         // save new commit
@@ -296,40 +292,24 @@ public class Repository {
     }
 
     public static void status() {
-        /* Printer PQ : creating a PQ that
-        * prints the added contents in lexicographic order*/
-        PriorityQueue<String> Printer = new PriorityQueue<>();
 
         // TODO list the branches
         System.out.println("=== Branches ===");
         System.out.println();
-        // list the staged files
+
+        /*list the staged files*/
         System.out.println("=== Staged Files ===");
-        File[] stagedFiles = ADD_DIR.listFiles();
-        if (stagedFiles != null) {
-            for (File f:stagedFiles) {
-                blob b = blob.readBlob(f);
-                Printer.add(b.getFileName());
-            }
-        }
-        while (!Printer.isEmpty()) {
-            String info = Printer.remove();
-            System.out.println(info);
+          // read the index
+        Index AddIndex = Index.fromFile(ADD_INDEX);
+        TreeSet<String> sortedFileNames = new TreeSet<>(AddIndex.getEntries().keySet());
+        for (String fileName : sortedFileNames) {
+            System.out.println(fileName);
         }
         System.out.println();
-        // list the removed files
+
+        /*list the removed files*/
         System.out.println("=== Removed Files ===");
-        File[] removedFiles = REMOVE_DIR.listFiles();
-        if (removedFiles != null) {
-            for (File f:removedFiles) {
-                blob b = blob.readBlob(f);
-                Printer.add(b.getFileName());
-            }
-        }
-        while (!Printer.isEmpty()) {
-            String info = Printer.remove();
-            System.out.println(info);
-        }
+
         System.out.println();
         // TODO list the modified files
         System.out.println("=== Modifications Not Staged For Commit ===");
