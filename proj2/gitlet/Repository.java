@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static gitlet.Utils.*;
+import static gitlet.Utils.writeContents;
 
 // TODO: any imports you need here
 
@@ -35,6 +36,7 @@ public class Repository {
     public static final File ADD_DIR = Utils.join(STAGING_DIR, "toAdd");
     public static final File REMOVE_DIR = Utils.join(STAGING_DIR, "toRemove");
     public static final File COMMITS_DIR = Utils.join(GITLET_DIR, "commits");
+    public static final File BRANCHES_DIR = Utils.join(GITLET_DIR, "branches");
     public static final File BLOBS_DIR = Utils.join(GITLET_DIR, "blobs");
     public static final File HEAD = Utils.join(GITLET_DIR, "HEAD");
     public static final File ADD_INDEX = Utils.join(ADD_DIR, "INDEX");
@@ -92,12 +94,17 @@ public class Repository {
         ADD_DIR.mkdir();
         REMOVE_DIR.mkdir();
         COMMITS_DIR.mkdir();
+        BRANCHES_DIR.mkdir();
         BLOBS_DIR.mkdir();
 
-        // Create HEAD file
+        // Create HEAD & master branch file
         try {
-            // Create a new file
+            File master = Utils.join(BRANCHES_DIR, "master");
+            master.createNewFile();
             HEAD.createNewFile();
+            Utils.writeContents(master, "");
+            updateHEADBranch("master");
+
         } catch (IOException e) {
             // Handle potential IOException (e.g., permission issues)
             e.printStackTrace();
@@ -110,7 +117,7 @@ public class Repository {
         RemoveIndex.toFile(REMOVE_INDEX);
 
         // initial commit
-        Commit initial = new Commit("initial commit", null);
+        // todo delete Commit initial = new Commit("initial commit", null);
         Repository.commit("initial commit");
 
         //TODO It will have a single branch: master, which initially points to this initial commit,
@@ -152,6 +159,7 @@ public class Repository {
             }
             if (!addIndex.getEntries().containsValue(b.getSHA1()) &&
             saveToFile.exists()) {
+                // check if other file has the same content
                 saveToFile.delete();
                 // remove blob from staging area
             }
@@ -164,18 +172,45 @@ public class Repository {
         }
     }
 
-    public static void updateHEAD(String commitHash) {
-        Utils.writeContents(HEAD, commitHash);
+    public static void updateHEADCommit(String commitHash) {
+        String headBranch = Utils.readContentsAsString(HEAD);
+        File branchFile = Utils.join(BRANCHES_DIR, headBranch);
+        Utils.writeContents(branchFile, commitHash);
     }
-    public static String getHEADID() {
+    public static void updateHEADBranch(String branch) {
+        Utils.writeContents(HEAD, branch);
+    }
+
+    public static String getHEADBranch() {
         return Utils.readContentsAsString(HEAD);
     }
+    public static void setHeadBranch(String branchName) {
+        writeContents(HEAD, branchName);
+    }
+
+    public static void setBranchHead(String branchName, String commitID) {
+        writeContents(Utils.join(BRANCHES_DIR, branchName), commitID);
+    }
+    public static String getHEADCommitID() {
+        String headBranch = Utils.readContentsAsString(HEAD);
+        File branchFile = Utils.join(BRANCHES_DIR, headBranch);
+        String commitID = Utils.readContentsAsString(branchFile);
+        return commitID;
+    }
     public static Commit getHEADCommit() {
-        if (getHEADID().isEmpty()) {
+        String headBranch = Utils.readContentsAsString(HEAD);
+        File branchFile = Utils.join(BRANCHES_DIR, headBranch);
+        String commitID = Utils.readContentsAsString(branchFile);
+        if (commitID.isEmpty()) {
             return null;
         }
-        File headCommit = Utils.join(Repository.COMMITS_DIR,getHEADID());
+        File headCommit = Utils.join(Repository.COMMITS_DIR,commitID);
         return readObject(headCommit,Commit.class);
+    }
+
+    public static HashSet<String> listBranch() {
+        HashSet<String> branches = new HashSet<>();
+        return branches;
     }
 
     public static void commit(String message) {
@@ -191,6 +226,7 @@ public class Repository {
             // check if nothing changes
             if (addIndex.size() ==0 & removeIndex.size() == 0) {
                 System.out.println("No changes added to the commit.");
+                return;
             }
 
             // add files
@@ -215,18 +251,65 @@ public class Repository {
             }
 
             // remove files
-            while (!removeIndex.isEmpty()) {
-                // todo remove during commit (hint: remove from index and get rid of blob in staging area)
-
-
+            for (String fileName:removeIndex.getEntries().keySet()) {
+                // untrack from commit
+                newCommit.removeFIle(fileName);
+                // remove from removeIndex
+                removeIndex.removeEntry(fileName);
             }
+            removeIndex.toFile(REMOVE_INDEX);
 
         }
 
         // save new commit
         newCommit.toFile();
         // update HEAD
-        updateHEAD(newCommit.getSHA1());
+        updateHEADCommit(newCommit.getSHA1()); //todo behavior is changed
+    }
+
+    public static void rm(String fileName) {
+        // todo remove
+        if (!GITLET_DIR.exists()) {
+            System.out.println("Not in an initialized Gitlet directory.");
+            return;
+        }
+
+        // get INDEX file
+        Index addIndex = Index.fromFile(ADD_INDEX);
+        Index removeIndex = Index.fromFile(REMOVE_INDEX);
+
+        // unstage file if needed
+        if (addIndex.getEntries().containsKey(fileName)) {
+            // get file hash
+            File f = Utils.join(CWD, fileName);
+
+            // make a new blob
+            File fStaged = Utils.join(ADD_DIR, sha1(readContentsAsString(f)));
+            blob b = new blob(fStaged);
+
+            addIndex.removeEntry(fileName);
+            addIndex.toFile(ADD_INDEX);
+            if (!addIndex.getEntries().containsValue(b.getFileName()) &&
+                    fStaged.exists()) {
+                fStaged.delete();
+                // remove blob from staging area
+            }
+            return;
+        }
+
+        // if the file is tracked
+        Commit headCommit = getHEADCommit();
+        if (headCommit.containsFile(fileName)) {
+            removeIndex.addEntry(fileName, sha1(fileName));
+            File f = Utils.join(CWD, fileName);
+            f.delete();
+            removeIndex.toFile(REMOVE_INDEX);
+            return;
+        }
+
+        // if neither
+        System.out.println("No reason to remove the file.");
+
     }
 
     public static void log() {
@@ -293,8 +376,15 @@ public class Repository {
 
     public static void status() {
 
-        // TODO list the branches
         System.out.println("=== Branches ===");
+        String headBranch = getHEADBranch();
+        for (File branch: Objects.requireNonNull(BRANCHES_DIR.listFiles())) {
+            if (branch.getName().equals(headBranch)) {
+                System.out.println("*"+branch.getName());
+            } else {
+                System.out.println(branch.getName());
+            }
+        }
         System.out.println();
 
         /*list the staged files*/
@@ -309,7 +399,11 @@ public class Repository {
 
         /*list the removed files*/
         System.out.println("=== Removed Files ===");
-
+        Index RemoveIndex = Index.fromFile(REMOVE_INDEX);
+        TreeSet<String> sortedFileNamesRemove = new TreeSet<>(RemoveIndex.getEntries().keySet());
+        for (String fileName : sortedFileNamesRemove) {
+            System.out.println(fileName);
+        }
         System.out.println();
         // TODO list the modified files
         System.out.println("=== Modifications Not Staged For Commit ===");
@@ -319,7 +413,7 @@ public class Repository {
         System.out.println();
     }
 
-    public static void checkout(String fileName) {
+    public static void checkoutFile(String fileName) {
     /*    Takes the version of the file as it exists in the head commit and puts
         it in the working directory, overwriting the version of the file that’s
         already there if there is one. The new version of the file is not staged.*/
@@ -381,6 +475,144 @@ public class Repository {
         File f = Utils.join(CWD,fileName);
         // overwrite with snapshot version
         writeContents(f,b.getContent());
+    }
+
+    public static void checkoutBranch(String branchName) {
+        if (branchName.equals(getHEADBranch())) {
+            System.out.println("No need to checkout the current branch.");
+            return;
+        }
+        if (!listBranch().contains(branchName)) {
+            System.out.println("No such branch exists.");
+            return;
+        }
+        //failure case 3
+        HashMap<String, String> files = getHEADCommit().getTree();
+
+        for (File f:CWD.listFiles()) {
+            if (!files.keySet().contains(f.getName())) {
+                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                return;
+            }
+        }
+        // set the head branch
+        setHeadBranch(branchName);
+        // get the lists of files at branch head
+        files = getHEADCommit().getTree();
+
+        for (File f:CWD.listFiles()) {
+            if (!files.keySet().contains(f.getName())) {
+                f.delete();
+            } else {
+                blob b = blob.readBlob( Utils.join(BLOBS_DIR, files.get(f.getName())));
+                //overwrites cwd file with head commit of that branch
+                b.toOriginalFile(Utils.join(CWD, f.getName()));
+            }
+        }
+
+        clearStagingArea();
+    }
+    public static void clearStagingArea() {
+        // clear the staging area
+        Index addIndex = Index.fromFile(ADD_INDEX);
+        HashMap<String, String> toAdd = addIndex.getEntries();
+        for (String fileName: toAdd.keySet()) {
+            File f = Utils.join(ADD_DIR, toAdd.get(fileName));
+            f.delete();
+            addIndex.removeEntry(fileName);
+        }
+        addIndex.toFile(ADD_INDEX);
+
+        Index removeIndex = Index.fromFile(REMOVE_INDEX);
+        HashMap<String, String> toRemove = removeIndex.getEntries();
+        for (String fileName: toRemove.keySet()) {
+            removeIndex.removeEntry(fileName);
+        }
+        removeIndex.toFile(REMOVE_INDEX);
+    }
+
+    public static void branch(String branchName) {
+        for (File branch:BRANCHES_DIR.listFiles()) {
+            if (branch.equals(branchName)) {
+                System.out.println("A branch with that name already exists.");
+                return;
+            }
+        }
+        File branchFile = Utils.join(BRANCHES_DIR,branchName);
+        String headCommit = getHEADCommitID();
+        try {
+            branchFile.createNewFile();
+            writeContents(branchFile, headCommit);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void removeBranch(String branchName) {
+        if (branchName.equals(getHEADBranch())) {
+            System.out.println("Cannot remove the current branch.");
+            return;
+        }
+        File branchFile = Utils.join(BRANCHES_DIR, branchName);
+        if (!branchFile.exists()) {
+            System.out.println("A branch with that name does not exist.");
+        } else {
+            branchFile.delete();
+        }
+    }
+
+    public static void reset(String commitID) {
+        // Check if commits id is real
+        if (commitID.length() >= 40) {
+            File commitFile = Utils.join(COMMITS_DIR,commitID);
+            if (!commitFile.exists()) {
+                System.out.println("No commit with that id exists.");
+                return;
+            }
+        }
+
+        // abbreviate commits
+        if (commitID.length() < 40) {
+            File commitFile = null;
+            File[] filesToCheck = COMMITS_DIR.listFiles();
+            for (File f:filesToCheck) {
+                if (f.getName().startsWith(commitID)) {
+                    commitFile = f;
+                }
+            }
+            if (commitFile == null) {
+                System.out.println("No commit with that id exists.");
+                return;
+            }
+        }
+
+        // check untracked file
+        File commitFile = Utils.join(COMMITS_DIR, getHEADCommitID());
+        Commit c = Commit.fromFile(commitFile);
+        HashMap<String, String> tree =  c.getTree();
+
+        for (File f:CWD.listFiles()) {
+            if (!tree.keySet().contains(f.getName())) {
+                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                return;
+            }
+        }
+
+        // move the branch head to that commit
+        setBranchHead(getHEADBranch(), commitID);
+
+        // checkout files
+        commitFile = Utils.join(COMMITS_DIR, commitID);
+        c = Commit.fromFile(commitFile);
+        tree =  c.getTree();
+        for (File file: CWD.listFiles()) {
+            if (!tree.containsKey(file)) {
+                file.delete();
+            } else {
+                // check out
+                checkout(commitID, file.getName());
+            }
+        }
     }
 
     public static void main(String[] args) {

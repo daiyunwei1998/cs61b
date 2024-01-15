@@ -88,6 +88,9 @@ public class Commit implements Serializable {
     public String getParentID() {
         return this.parentID;
     }
+    public HashMap<String, String> getTree(){
+        return this.tree;
+    }
 
     public void addFile(String fileName, String blobName) {
         // update tree object
@@ -95,9 +98,9 @@ public class Commit implements Serializable {
         this.updateSHA1();
     }
 
-    public void removeFIle(String fileName, String blobName) {
+    public void removeFIle(String fileName) {
         // remove an object from tree
-        tree.put(fileName, blobName);
+        tree.remove(fileName);
         this.updateSHA1();
     }
 

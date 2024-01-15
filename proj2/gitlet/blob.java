@@ -27,6 +27,9 @@ public class blob implements Serializable{
     public void toFile(File filePath) {
         writeObject(filePath, this);
     }
+    public void toOriginalFile(File filePath) {
+        writeContents(filePath, this.contents);
+    }
 
     /* load a file */
     public static blob readBlob(File filePath) {

@@ -35,10 +35,17 @@ public class Main {
                 break;
             case "commit":
                 if (args.length >= 2) {
-                    // why >= 2 though? why not == 2
                     Repository.commit(args[1]);
                 } else {
                     System.out.println("Please enter a commit message.");
+                }
+                break;
+            case "rm":
+                if (args.length == 2) {
+                    Repository.rm(args[1]);
+                } else {
+                    System.out.println(args[1]);
+                    System.out.println("Incorrect operands.");
                 }
                 break;
             case "log":
@@ -63,10 +70,10 @@ public class Main {
                 break;
             case "checkout":
                 //TODO checkout
-                if (args.length == 3 &Objects.equals(args[1], "--")) {
+                if (args.length == 3 & Objects.equals(args[1], "--")) {
                     // case 1
                     String filename = args[2];
-                    Repository.checkout(filename);
+                    Repository.checkoutFile(filename);
                 }
                 if (args.length == 4 & Objects.equals(args[2], "--")) {
                     // case 2
@@ -75,15 +82,32 @@ public class Main {
                     Repository.checkout(commitID, fileName);
 
                 }
+                if (args.length == 2) {
+                    // case 1
+                    String branchName = args[0];
+                    Repository.checkoutBranch(branchName);
+                }
                 break;
             case "branch":
-                //TODO branch
+                if (args.length != 2) {
+                    System.out.println("Incorrect operands.");
+                } else {
+                    Repository.branch(args[1]);
+                }
                 break;
             case "rm-branch":
-                //TODO rm-branch
+                if (args.length != 2) {
+                    System.out.println("Incorrect operands.");
+                } else {
+                    Repository.removeBranch(args[1]);
+                }
                 break;
             case "reset":
-                //TODO reset
+                if (args.length != 2) {
+                    System.out.println("Incorrect operands.");
+                } else {
+                    Repository.reset(args[1]);
+                }
                 break;
             case "merge":
                 //TODO merge
