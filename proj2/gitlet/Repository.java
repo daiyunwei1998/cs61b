@@ -437,21 +437,25 @@ public class Repository {
         }
     }
 
-    public static Set<String> modified() {
-        Set<String> result = new HashSet<>();
+    public static HashMap<String, String> modified() {
+        HashMap<String, String> result = new HashMap<>();
         Index addIndex = Index.fromFile(ADD_INDEX);
         Index removeIndex = Index.fromFile(REMOVE_INDEX);
 
         for (String fileName: addIndex.getEntries().keySet()) {
-            /*return the hash1 code of given file in commit*/
-            String version = sha1(readContentsAsString(Utils.join(CWD, fileName)));
-            // if staged for addition but version doesn't match
-            if (!addIndex.get(fileName).equals(version)) {
-                result.add(fileName);
-            }
             // if deleted in CWD
             if (!Utils.join(CWD, fileName).exists()) {
-                result.add(fileName);
+                result.put(fileName, "(deleted)");
+            }
+
+            /*return the hash1 code of given file in commit*/
+            File currentVersion = Utils.join(CWD, fileName);
+            if (currentVersion.exists()) {
+                String version = sha1(readContentsAsString(currentVersion));
+                // if staged for addition but version doesn't match
+                if (!addIndex.get(fileName).equals(version)) {
+                    result.put(fileName, "(modified)");
+                }
             }
         }
 
@@ -464,18 +468,21 @@ public class Repository {
 
         // tracked in the current commit
         for (String fileName: commitFiles.keySet()) {
-            // if changed in CWD
-            String version = sha1(readContentsAsString(Utils.join(CWD, fileName)));
-            if (!commitFiles.get(fileName).equals(version)) {
-                result.add(fileName);
-            }
             // if not staged for rm, tracked in commit and deleted from CWD
             if (!removeIndex.getEntries().containsKey(fileName) && !Utils.join(CWD, fileName).exists()) {
-                result.add(fileName);
+                result.put(fileName, "(deleted)");
+            }
+
+            // if changed in CWD
+            File currentVersion = Utils.join(CWD, fileName);
+            if (currentVersion.exists()) {
+                String version = sha1(readContentsAsString(currentVersion));
+                if (!commitFiles.get(fileName).equals(version)) {
+                    result.put(fileName, "(modified)");
+                }
             }
 
         }
-
         return result;
     }
 
@@ -498,7 +505,7 @@ public class Repository {
 
 
         // get modified set of files
-        Set<String> modifiedFiles = modified();
+        HashMap<String, String> modifiedFiles = modified();
 
         /*list the staged files*/
         System.out.println("=== Staged Files ===");
@@ -506,7 +513,7 @@ public class Repository {
         Index AddIndex = Index.fromFile(ADD_INDEX);
         TreeSet<String> sortedFileNames = new TreeSet<>(AddIndex.getEntries().keySet());
         for (String fileName : sortedFileNames) {
-            if (!modifiedFiles.contains(fileName)) {
+            if (!modifiedFiles.containsKey(fileName)) {
                 System.out.println(fileName);
             }
         }
@@ -522,14 +529,14 @@ public class Repository {
         System.out.println();
         System.out.println("=== Modifications Not Staged For Commit ===");
 
-        for (String f: modifiedFiles) {
-            System.out.println(f);
+        for (String f: modifiedFiles.keySet()) {
+            System.out.println(f+" "+modifiedFiles.get(f));
         }
         System.out.println();
         System.out.println("=== Untracked Files ===");
         Index addIndex = Index.fromFile(ADD_INDEX);
         for (String untrackedFile:difference(getUntracked(),addIndex.getEntries().keySet())) {
-            if (!modifiedFiles.contains(untrackedFile)) {
+            if (!modifiedFiles.containsKey(untrackedFile)) {
                 System.out.println(untrackedFile);
             }
         }
