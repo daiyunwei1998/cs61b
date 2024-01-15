@@ -34,8 +34,8 @@ public class Main {
                 }
                 break;
             case "commit":
-                if (args.length == 3) {
-                    Repository.commit(args[2]);
+                if (args.length >= 2) {
+                    Repository.commit(args[1]);
                 } else {
                     System.out.println("Please enter a commit message.");
                 }
