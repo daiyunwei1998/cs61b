@@ -687,9 +687,8 @@ public class Repository {
             CWDFileSet.add(f.getName());
         }
         Set<String> headFileSet = getHEADCommit().getTree().keySet();
-        Set<String> trackedSet = Index.fromFile(TRACKED).getEntries().keySet();
 
-        if (!difference(CWDFileSet, trackedSet).isEmpty()) {
+        if (!difference(CWDFileSet, headFileSet).isEmpty()) {
             System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
             return;
         }
@@ -711,9 +710,9 @@ public class Repository {
     }
 
     public static void main(String[] args) {
-        File f = Utils.join("C:\\Users\\daiyu\\Desktop\\test-gitlet\\INDEX");
-        Index i = Index.fromFile(f);
-        for (String s:i.getEntries().keySet()) {
+        File f = Utils.join("C:\\Users\\daiyu\\Desktop\\test-gitlet\\.gitlet\\commits\\9b75ad9a5a2c871163f64180627456b8e0824900");
+        Commit c = Commit.fromFile(f);
+        for (String s:c.getTree().keySet()) {
             System.out.println(s);
         }
     }
