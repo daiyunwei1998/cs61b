@@ -64,6 +64,7 @@ public class Repository {
             this.entries.remove(fileName);
         }
         private String get(String fileName) {
+            // returns the version (sha1) of file staged
             return this.entries.get(fileName);
         }
 
@@ -436,6 +437,48 @@ public class Repository {
         }
     }
 
+    public static Set<String> modified() {
+        Set<String> result = new HashSet<>();
+        Index addIndex = Index.fromFile(ADD_INDEX);
+        Index removeIndex = Index.fromFile(REMOVE_INDEX);
+
+        for (String fileName: addIndex.getEntries().keySet()) {
+            /*return the hash1 code of given file in commit*/
+            String version = sha1(readContentsAsString(Utils.join(CWD, fileName)));
+            // if staged for addition but version doesn't match
+            if (!addIndex.get(fileName).equals(version)) {
+                result.add(fileName);
+            }
+            // if deleted in CWD
+            if (!Utils.join(CWD, fileName).exists()) {
+                result.add(fileName);
+            }
+        }
+
+        HashMap<String, String> commitFiles = getHEADCommit().getTree();
+        Set<String> CWDFileSet = new HashSet<>();
+        FileFilter filter = file -> file.isFile();
+        for (File f:CWD.listFiles(filter)) {
+            CWDFileSet.add(f.getName());
+        }
+
+        // tracked in the current commit
+        for (String fileName: commitFiles.keySet()) {
+            // if changed in CWD
+            String version = sha1(readContentsAsString(Utils.join(CWD, fileName)));
+            if (!commitFiles.get(fileName).equals(version)) {
+                result.add(fileName);
+            }
+            // if not staged for rm, tracked in commit and deleted from CWD
+            if (!removeIndex.getEntries().containsKey(fileName) && !Utils.join(CWD, fileName).exists()) {
+                result.add(fileName);
+            }
+
+        }
+
+        return result;
+    }
+
     public static void status() {
         if (!GITLET_DIR.exists()) {
             System.out.println("Not in an initialized Gitlet directory.");
@@ -453,13 +496,19 @@ public class Repository {
         }
         System.out.println();
 
+
+        // get modified set of files
+        Set<String> modifiedFiles = modified();
+
         /*list the staged files*/
         System.out.println("=== Staged Files ===");
           // read the index
         Index AddIndex = Index.fromFile(ADD_INDEX);
         TreeSet<String> sortedFileNames = new TreeSet<>(AddIndex.getEntries().keySet());
         for (String fileName : sortedFileNames) {
-            System.out.println(fileName);
+            if (!modifiedFiles.contains(fileName)) {
+                System.out.println(fileName);
+            }
         }
         System.out.println();
 
@@ -471,13 +520,18 @@ public class Repository {
             System.out.println(fileName);
         }
         System.out.println();
-        // TODO list the modified files
         System.out.println("=== Modifications Not Staged For Commit ===");
+
+        for (String f: modifiedFiles) {
+            System.out.println(f);
+        }
         System.out.println();
-        // TODO list the untracked files
         System.out.println("=== Untracked Files ===");
-        for (String untrackedFile:getUntracked()) {
-            System.out.println(untrackedFile);
+        Index addIndex = Index.fromFile(ADD_INDEX);
+        for (String untrackedFile:difference(getUntracked(),addIndex.getEntries().keySet())) {
+            if (!modifiedFiles.contains(untrackedFile)) {
+                System.out.println(untrackedFile);
+            }
         }
         System.out.println();
     }

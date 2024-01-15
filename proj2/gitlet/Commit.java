@@ -112,6 +112,9 @@ public class Commit implements Serializable {
         File blobFile = Utils.join(Repository.BLOBS_DIR, blobID);
         return Blob.readBlob(blobFile);
     }
+    public String getVersion(String fileName) {
+        return tree.get(fileName);
+    }
 
     public void toFile() {
         // make a commit object
