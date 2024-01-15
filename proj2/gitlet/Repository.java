@@ -245,7 +245,17 @@ public class Repository {
 
     }
 
+    public static Set<String> getUntracked() {
+        Set<String> CWDFileSet = new HashSet<>();
+        FileFilter filter = file -> file.isFile();
+        for (File f:CWD.listFiles(filter)) {
+            CWDFileSet.add(f.getName());
+        }
 
+        Set<String> headFileSet = getHEADCommit().getTree().keySet();
+
+        return difference(CWDFileSet, headFileSet);
+    }
     public static void commit(String message) {
         if (message.isEmpty()) {
             System.out.println("Please enter a commit message.");
@@ -466,6 +476,9 @@ public class Repository {
         System.out.println();
         // TODO list the untracked files
         System.out.println("=== Untracked Files ===");
+        for (String untrackedFile:getUntracked()) {
+            System.out.println(untrackedFile);
+        }
         System.out.println();
     }
 
