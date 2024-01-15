@@ -216,6 +216,10 @@ public class Repository {
 
 
     public static void commit(String message) {
+        if (message.isEmpty()) {
+            System.out.println("Please enter a commit message.");
+        }
+
         Commit HEADCommit = getHEADCommit();
 
         // make a new commit object
@@ -421,8 +425,7 @@ public class Repository {
         already there if there is one. The new version of the file is not staged.*/
 
         // Check if filename exists in HEAD commit
-        String HEADCommitID = readContentsAsString(HEAD);
-        Commit HEADCommit = Commit.fromFile(Utils.join(COMMITS_DIR,HEADCommitID));
+        Commit HEADCommit = getHEADCommit();
         if (!HEADCommit.containsFile(fileName)) {
             System.out.println("File does not exist in that commit.");
             return;
@@ -497,7 +500,6 @@ public class Repository {
 
         FileFilter filter = file -> file.isFile();
         for (File f:CWD.listFiles(filter)) {
-            System.out.println(f.getName());
             if (!files.keySet().contains(f.getName())) {
                 System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                 return;
@@ -573,7 +575,7 @@ public class Repository {
         }
         File branchFile = Utils.join(BRANCHES_DIR, branchName);
         if (!branchFile.exists()) {
-            System.out.println("No such branch exists.");
+            System.out.println("A branch with that name does not exist.");
         } else {
             branchFile.delete();
         }
