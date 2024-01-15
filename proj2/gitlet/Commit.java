@@ -10,14 +10,10 @@ import java.util.Map;
 import static gitlet.Utils.readObject;
 
 /** Represents a gitlet commit object.
- *  TODO: It's a good idea to give a description here of what else this Class
- *  does at a high level.
  *
  */
 public class Commit implements Serializable {
     /**
-     * TODO: add instance variables here.
-     *
      * List all instance variables of the Commit class here with a useful
      * comment above them describing what that variable represents and how that
      * variable is used. We've provided one example for `message`.
@@ -25,18 +21,19 @@ public class Commit implements Serializable {
 
     /** The message of this Commit. */
     private String message;
+    /** The timestamp of this Commit. default 1970 */
     private Date timestamp;
 
     /** every commit point to its parent
      use string to avoid serializing pointers */
     private String parentID;
 
-    /** the hash of its tree object */
+    /** the tree object */
     private HashMap<String, String> tree;
 
+    /** the hash of this commit */
     private String sha1;
 
-    /* TODO: fill in the rest of this class. */
     public Commit(String message, Commit parent) {
         if (!Utils.join(Repository.CWD, ".gitlet").exists()) {
             System.out.println("Not in an initialized Gitlet directory.");
@@ -62,14 +59,13 @@ public class Commit implements Serializable {
     public void updateSHA1() {
         StringBuilder treeContent = new StringBuilder();
         for (Map.Entry<String, String> entry : tree.entrySet()) {
-            treeContent.append(entry.getKey())
-                    .append(entry.getValue());
+            treeContent.append(entry.getKey()).append(entry.getValue());
         }
         // Concatenate relevant information (message, timestamp, parent SHA-1)
-        String info = this.message +
-                this.timestamp.toString() +
-                (this.parentID != null ? this.parentID: "") +
-                treeContent.toString();
+        String info = this.message
+                + this.timestamp.toString()
+                +  (this.parentID != null ? this.parentID : "")
+                + treeContent.toString();
         this.sha1 = Utils.sha1(info);
     }
 
@@ -88,7 +84,7 @@ public class Commit implements Serializable {
     public String getParentID() {
         return this.parentID;
     }
-    public HashMap<String, String> getTree(){
+    public HashMap<String, String> getTree() {
         return this.tree;
     }
 
@@ -107,14 +103,14 @@ public class Commit implements Serializable {
     public boolean containsFile(String fileName) {
         return tree.containsKey(fileName);
     }
-    public blob getBlob(String fileName) {
+    public Blob getBlob(String fileName) {
         /* given filename returns the blob file*/
         if (!containsFile(fileName)) {
             return null;
         }
         String blobID = tree.get(fileName);
-        File blobFile = Utils.join(Repository.BLOBS_DIR,blobID);
-        return blob.readBlob(blobFile);
+        File blobFile = Utils.join(Repository.BLOBS_DIR, blobID);
+        return Blob.readBlob(blobFile);
     }
 
     public void toFile() {

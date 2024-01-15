@@ -1,25 +1,27 @@
 package gitlet;
 import java.io.File;
 import java.io.Serializable;
-import java.sql.Blob;
 
 import static gitlet.Utils.*;
 
-public class blob implements Serializable{
+public class Blob implements Serializable {
     private String fileName;
     private String contents;
 
-    public blob(File file) {
+    public Blob(File file) {
         this.fileName = file.getName();
         this.contents = readContentsAsString(file);
     }
 
     public String getSHA1() {
+
         return sha1(this.contents);
     }
 
-    public String getFileName() { return this.fileName; }
+    public String getFileName() {
+        return this.fileName; }
     public String getContent() {
+
         return this.contents;
     }
 
@@ -32,8 +34,8 @@ public class blob implements Serializable{
     }
 
     /* load a file */
-    public static blob readBlob(File filePath) {
-        blob b = readObject(filePath, blob.class);
+    public static Blob readBlob(File filePath) {
+        Blob b = readObject(filePath, Blob.class);
         return b;
     }
 

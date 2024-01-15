@@ -35,7 +35,7 @@ public class Main {
                 break;
             case "commit":
                 if (args.length >= 2) {
-                    Repository.commit(args[1]);
+                    Repository.commit(args[2]);
                 } else {
                     System.out.println("Please enter a commit message.");
                 }
@@ -74,19 +74,20 @@ public class Main {
                     // case 1
                     String filename = args[2];
                     Repository.checkoutFile(filename);
-                }
-                if (args.length == 4 && Objects.equals(args[2], "--")) {
+                } else if (args.length == 4 && Objects.equals(args[2], "--")) {
                     // case 2
                     String commitID = args[1];
                     String fileName = args[3];
                     Repository.checkout(commitID, fileName);
 
-                }
-                if (args.length == 2) {
+                } else if (args.length == 2) {
                     // case 1
                     String branchName = args[1];
                     Repository.checkoutBranch(branchName);
+                } else {
+                    System.out.println("Incorrect operands.");
                 }
+
                 break;
             case "branch":
                 if (args.length != 2) {

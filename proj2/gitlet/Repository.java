@@ -148,7 +148,7 @@ public class Repository {
         Index addIndex = Index.fromFile(ADD_INDEX);
 
         // make a new blob
-        blob b = new blob(f);
+        Blob b = new Blob(f);
 
         // get hash (filename of the blob)
         File saveToFile = Utils.join(ADD_DIR, b.getSHA1());
@@ -291,7 +291,7 @@ public class Repository {
 
             // make a new blob
             File fStaged = Utils.join(ADD_DIR, sha1(readContentsAsString(f)));
-            blob b = new blob(fStaged);
+            Blob b = new Blob(fStaged);
 
             addIndex.removeEntry(fileName);
             addIndex.toFile(ADD_INDEX);
@@ -431,7 +431,7 @@ public class Repository {
             return;
         }
         // read the blob
-        blob b = HEADCommit.getBlob(fileName);
+        Blob b = HEADCommit.getBlob(fileName);
         // make new file
         File f = Utils.join(CWD,fileName);
         // overwrite with snapshot version
@@ -475,7 +475,7 @@ public class Repository {
             return;
         }
         // read the blob
-        blob b = c.getBlob(fileName);
+        Blob b = c.getBlob(fileName);
         // make new file
         File f = Utils.join(CWD,fileName);
         // overwrite with snapshot version
@@ -514,7 +514,7 @@ public class Repository {
             if (!files.keySet().contains(f.getName())) {
                 f.delete();
             } else {
-                blob b = blob.readBlob( Utils.join(BLOBS_DIR, files.get(f.getName())));
+                Blob b = Blob.readBlob( Utils.join(BLOBS_DIR, files.get(f.getName())));
                 //overwrites cwd file with head commit of that branch
                 b.toOriginalFile(Utils.join(CWD, f.getName()));
             }
