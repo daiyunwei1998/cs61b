@@ -573,7 +573,7 @@ public class Repository {
         }
         File branchFile = Utils.join(BRANCHES_DIR, branchName);
         if (!branchFile.exists()) {
-            System.out.println("A branch with that name does not exist.");
+            System.out.println("No such branch exists.");
         } else {
             branchFile.delete();
         }
