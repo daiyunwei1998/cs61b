@@ -560,8 +560,9 @@ public class Repository {
       Set<String> commitFileSet = targetCommit.getTree().keySet();
       Set<String> filesToDelete = difference(CWDFileSet, commitFileSet);
 
-      // warn users about untracked files
-      if (!difference(CWDFileSet, headFileSet).isEmpty()) {
+      // warn users about untracked files being overwritten
+      Set<String> untracked = difference(CWDFileSet, headFileSet);
+      if (!intersection(commitFileSet,untracked).isEmpty()) {
           System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
           return;
       }
@@ -687,8 +688,11 @@ public class Repository {
             CWDFileSet.add(f.getName());
         }
         Set<String> headFileSet = getHEADCommit().getTree().keySet();
+        Set<String> commitFileSet = Commit.fromFile(Utils.join(COMMITS_DIR, commitID)).getTree().keySet();
 
-        if (!difference(CWDFileSet, headFileSet).isEmpty()) {
+        // warn users about untracked files being overwritten
+        Set<String> untracked = difference(CWDFileSet, headFileSet);
+        if (!intersection(commitFileSet,untracked).isEmpty()) {
             System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
             return;
         }
