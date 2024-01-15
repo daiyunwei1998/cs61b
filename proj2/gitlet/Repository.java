@@ -792,13 +792,14 @@ public class Repository {
         // checkout files
         Commit c = Commit.fromFile(Utils.join(COMMITS_DIR, commitID));
         HashMap<String, String> tree =  c.getTree();
-        for (File file: CWD.listFiles(filter)) {
-            if (!tree.containsKey(file.getName())) {
-                file.delete();
-            } else {
-                // check out
-                checkout(commitID, file.getName());
-            }
+        Set<String> filesToDelete = difference(CWDFileSet, tree.keySet());
+
+        for (String fileName: filesToDelete) {
+            Utils.join(CWD, fileName).delete();
+        }
+
+        for (String fileName: tree.keySet()) {
+            checkout(commitID, fileName);
         }
 
         // clear the staging area
@@ -806,7 +807,7 @@ public class Repository {
     }
 
     public static void main(String[] args) {
-        File f = Utils.join("C:\\Users\\daiyu\\Desktop\\test-gitlet\\.gitlet\\commits\\9b75ad9a5a2c871163f64180627456b8e0824900");
+        File f = Utils.join("C:\\Users\\daiyu\\Desktop\\test-gitlet\\.gitlet\\commits\\475d8e9d89b1432fcc6f9aee0ea8df78b2d9b7d0");
         Commit c = Commit.fromFile(f);
         for (String s:c.getTree().keySet()) {
             System.out.println(s);
