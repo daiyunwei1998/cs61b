@@ -322,6 +322,10 @@ public class Repository {
     }
 
     public static void log() {
+        if (!GITLET_DIR.exists()) {
+            System.out.println("Not in an initialized Gitlet directory.");
+            return;
+        }
         Commit c = Repository.getHEADCommit();
         SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z");
 
@@ -352,6 +356,10 @@ public class Repository {
     }
 
     public static void globalLog() {
+        if (!GITLET_DIR.exists()) {
+            System.out.println("Not in an initialized Gitlet directory.");
+            return;
+        }
         File[] commitFiles = COMMITS_DIR.listFiles();
         SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z");
 
@@ -368,6 +376,10 @@ public class Repository {
     }
 
     public static void find(String message) {
+        if (!GITLET_DIR.exists()) {
+            System.out.println("Not in an initialized Gitlet directory.");
+            return;
+        }
         File[] commitFiles = COMMITS_DIR.listFiles();
         assert commitFiles != null;
         boolean found = false;
@@ -384,6 +396,10 @@ public class Repository {
     }
 
     public static void status() {
+        if (!GITLET_DIR.exists()) {
+            System.out.println("Not in an initialized Gitlet directory.");
+            return;
+        }
 
         System.out.println("=== Branches ===");
         String headBranch = getHEADBranch();
@@ -427,6 +443,10 @@ public class Repository {
         it in the working directory, overwriting the version of the file that’s
         already there if there is one. The new version of the file is not staged.*/
 
+        if (!GITLET_DIR.exists()) {
+            System.out.println("Not in an initialized Gitlet directory.");
+            return;
+        }
         // Check if filename exists in HEAD commit
         Commit HEADCommit = getHEADCommit();
         if (!HEADCommit.containsFile(fileName)) {
@@ -445,6 +465,10 @@ public class Repository {
     /*    Takes the version of the file as it exists in the commit with the given id,
     and puts it in the working directory, overwriting the version of the file that’s
     already there if there is one. The new version of the file is not staged.*/
+        if (!GITLET_DIR.exists()) {
+            System.out.println("Not in an initialized Gitlet directory.");
+            return;
+        }
 
         File commitFile = null;
 
@@ -499,6 +523,11 @@ public class Repository {
 
 
     public static void checkoutBranch(String branchName) {
+        if (!GITLET_DIR.exists()) {
+            System.out.println("Not in an initialized Gitlet directory.");
+            return;
+        }
+
         if (branchName.equals(getHEADBranch())) {
             System.out.println("No need to checkout the current branch.");
             return;
@@ -642,27 +671,26 @@ public class Repository {
         }
 
         // check untracked file
-        File commitFile = Utils.join(COMMITS_DIR, getHEADCommitID());
-        Commit c = Commit.fromFile(commitFile);
-        HashMap<String, String> tree =  c.getTree();
-
+        Set<String> CWDFileSet = new HashSet<>();
         FileFilter filter = file -> file.isFile();
         for (File f:CWD.listFiles(filter)) {
-            if (!tree.keySet().contains(f.getName())) {
-                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
-                return;
-            }
+            CWDFileSet.add(f.getName());
+        }
+        Set<String> headFileSet = getHEADCommit().getTree().keySet();
+
+        if (!difference(CWDFileSet, headFileSet).isEmpty()) {
+            System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+            return;
         }
 
         // move the branch head to that commit
         setBranchHead(getHEADBranch(), commitID);
 
         // checkout files
-        commitFile = Utils.join(COMMITS_DIR, commitID);
-        c = Commit.fromFile(commitFile);
-        tree =  c.getTree();
+        Commit c = Commit.fromFile(Utils.join(COMMITS_DIR, commitID));
+        HashMap<String, String> tree =  c.getTree();
         for (File file: CWD.listFiles(filter)) {
-            if (!tree.containsKey(file)) {
+            if (!tree.containsKey(file.getName())) {
                 file.delete();
             } else {
                 // check out
