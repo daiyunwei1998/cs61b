@@ -2,9 +2,7 @@ package gitlet;
 
 //todo delete import edu.princeton.cs.algs4.StdOut;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -130,11 +128,19 @@ public class Repository {
             return;
         }
 
+        // check if in remove area
+        Index removeIndex = Index.fromFile(REMOVE_INDEX);
+        if (removeIndex.getEntries().containsKey(fileName)) {
+            removeIndex.removeEntry(fileName);
+            removeIndex.toFile(REMOVE_INDEX);
+            return;
+        }
+
         File f = new File(fileName);
 
         //check if input file exist
         if (!f.exists()) {
-            System.out.println("File to add does not exist.");
+            System.out.println("File does not exist.");
             return;
         }
 
@@ -208,10 +214,6 @@ public class Repository {
         return readObject(headCommit,Commit.class);
     }
 
-    public static HashSet<String> listBranch() {
-        HashSet<String> branches = new HashSet<>();
-        return branches;
-    }
 
     public static void commit(String message) {
         Commit HEADCommit = getHEADCommit();
@@ -482,14 +484,20 @@ public class Repository {
             System.out.println("No need to checkout the current branch.");
             return;
         }
-        if (!listBranch().contains(branchName)) {
-            System.out.println("No such branch exists.");
-            return;
-        }
+
+      if (!branchExist(branchName)) {
+          System.out.println("No such branch exists.");
+          return;
+      }
+
+
+
         //failure case 3
         HashMap<String, String> files = getHEADCommit().getTree();
 
-        for (File f:CWD.listFiles()) {
+        FileFilter filter = file -> file.isFile();
+        for (File f:CWD.listFiles(filter)) {
+            System.out.println(f.getName());
             if (!files.keySet().contains(f.getName())) {
                 System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                 return;
@@ -500,7 +508,7 @@ public class Repository {
         // get the lists of files at branch head
         files = getHEADCommit().getTree();
 
-        for (File f:CWD.listFiles()) {
+        for (File f:CWD.listFiles(filter)) {
             if (!files.keySet().contains(f.getName())) {
                 f.delete();
             } else {
@@ -548,6 +556,16 @@ public class Repository {
         }
     }
 
+    public static boolean branchExist(String branchName) {
+        // check if branch exist
+        boolean match = false;
+        for(File f:BRANCHES_DIR.listFiles()) {
+            if (branchName.equals(f.getName())) {
+                match = true;
+            }
+        }
+        return match;
+    }
     public static void removeBranch(String branchName) {
         if (branchName.equals(getHEADBranch())) {
             System.out.println("Cannot remove the current branch.");
@@ -591,7 +609,8 @@ public class Repository {
         Commit c = Commit.fromFile(commitFile);
         HashMap<String, String> tree =  c.getTree();
 
-        for (File f:CWD.listFiles()) {
+        FileFilter filter = file -> file.isFile();
+        for (File f:CWD.listFiles(filter)) {
             if (!tree.keySet().contains(f.getName())) {
                 System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
                 return;
@@ -605,7 +624,7 @@ public class Repository {
         commitFile = Utils.join(COMMITS_DIR, commitID);
         c = Commit.fromFile(commitFile);
         tree =  c.getTree();
-        for (File file: CWD.listFiles()) {
+        for (File file: CWD.listFiles(filter)) {
             if (!tree.containsKey(file)) {
                 file.delete();
             } else {

@@ -70,12 +70,12 @@ public class Main {
                 break;
             case "checkout":
                 //TODO checkout
-                if (args.length == 3 & Objects.equals(args[1], "--")) {
+                if (args.length == 3 && Objects.equals(args[1], "--")) {
                     // case 1
                     String filename = args[2];
                     Repository.checkoutFile(filename);
                 }
-                if (args.length == 4 & Objects.equals(args[2], "--")) {
+                if (args.length == 4 && Objects.equals(args[2], "--")) {
                     // case 2
                     String commitID = args[1];
                     String fileName = args[3];
@@ -84,7 +84,7 @@ public class Main {
                 }
                 if (args.length == 2) {
                     // case 1
-                    String branchName = args[0];
+                    String branchName = args[1];
                     Repository.checkoutBranch(branchName);
                 }
                 break;
