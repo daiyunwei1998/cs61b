@@ -39,6 +39,7 @@ public class Repository {
     public static final File HEAD = Utils.join(GITLET_DIR, "HEAD");
     public static final File ADD_INDEX = Utils.join(ADD_DIR, "INDEX");
     public static final File REMOVE_INDEX = Utils.join(REMOVE_DIR, "INDEX");
+    public static final File TRACKED = Utils.join(GITLET_DIR, "INDEX");
 
     private static class Index implements Serializable {
         private HashMap<String, String> entries;
@@ -111,8 +112,10 @@ public class Repository {
         // Create index for staging area (add and remove)
         Index AddIndex = new Index();
         Index RemoveIndex = new Index();
+        Index Tracked = new Index();
         AddIndex.toFile(ADD_INDEX);
         RemoveIndex.toFile(REMOVE_INDEX);
+        Tracked.toFile(TRACKED);
 
         // initial commit
         // todo delete Commit initial = new Commit("initial commit", null);
@@ -122,6 +125,10 @@ public class Repository {
         // and master will be the current branch.
     }
 
+    public static boolean isTracked(String fileName) {
+        Index tracked = Index.fromFile(TRACKED);
+        return tracked.getEntries().containsKey(fileName);
+    }
     public static void add(String fileName) {
         if (!GITLET_DIR.exists()) {
             System.out.println("Not in an initialized Gitlet directory.");
@@ -231,6 +238,7 @@ public class Repository {
             // read indexes
             Index addIndex = Index.fromFile(ADD_INDEX);
             Index removeIndex = Index.fromFile(REMOVE_INDEX);
+            Index tracked = Index.fromFile(TRACKED);
 
             // check if nothing changes
             if (addIndex.size() ==0 & removeIndex.size() == 0) {
@@ -246,9 +254,11 @@ public class Repository {
                 String key = it.next();
                 filesToAdd.add(addIndex.get(key));
                 newCommit.addFile(key,addIndex.get(key));
+                tracked.addEntry(key, ""); // don't have to store version info
                 it.remove();
             }
             addIndex.toFile(ADD_INDEX);
+            tracked.toFile(TRACKED);
 
             for (String blobName:filesToAdd) {
                 File oldFile = Utils.join(ADD_DIR, blobName);
@@ -677,8 +687,9 @@ public class Repository {
             CWDFileSet.add(f.getName());
         }
         Set<String> headFileSet = getHEADCommit().getTree().keySet();
+        Set<String> trackedSet = Index.fromFile(TRACKED).getEntries().keySet();
 
-        if (!difference(CWDFileSet, headFileSet).isEmpty()) {
+        if (!difference(CWDFileSet, trackedSet).isEmpty()) {
             System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
             return;
         }
@@ -700,9 +711,9 @@ public class Repository {
     }
 
     public static void main(String[] args) {
-        File f = Utils.join("C:\\Users\\daiyu\\Desktop\\test-gitlet\\.gitlet\\commits\\9b75ad9a5a2c871163f64180627456b8e0824900");
-        Commit c = Commit.fromFile(f);
-        for (String s:c.getTree().keySet()) {
+        File f = Utils.join("C:\\Users\\daiyu\\Desktop\\test-gitlet\\INDEX");
+        Index i = Index.fromFile(f);
+        for (String s:i.getEntries().keySet()) {
             System.out.println(s);
         }
     }
