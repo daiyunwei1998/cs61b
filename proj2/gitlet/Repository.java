@@ -213,6 +213,7 @@ public class Repository {
         String commitID = Utils.readContentsAsString(branchFile);
         return commitID;
     }
+
     public static Commit getHEADCommit() {
         String headBranch = Utils.readContentsAsString(HEAD);
         File branchFile = Utils.join(BRANCHES_DIR, headBranch);
@@ -222,6 +223,26 @@ public class Repository {
         }
         File headCommit = Utils.join(Repository.COMMITS_DIR,commitID);
         return readObject(headCommit,Commit.class);
+    }
+    public static String getFullID(String commitID) {
+        if (commitID.length() >= 40) {
+            throw new IllegalArgumentException("Not a abbreviated commid ID");
+        }
+
+        File commitFile = null;
+        File[] filesToCheck = COMMITS_DIR.listFiles();
+        for (File f:filesToCheck) {
+            if (f.getName().startsWith(commitID)) {
+                commitFile = f;
+            }
+        }
+        if (commitFile == null) {
+            System.out.println("No commit with that id exists.");
+            return null;
+        } else {
+            return commitFile.getName();
+        }
+
     }
 
 
@@ -668,17 +689,11 @@ public class Repository {
 
         // abbreviate commits
         if (commitID.length() < 40) {
-            File commitFile = null;
-            File[] filesToCheck = COMMITS_DIR.listFiles();
-            for (File f:filesToCheck) {
-                if (f.getName().startsWith(commitID)) {
-                    commitFile = f;
-                }
-            }
-            if (commitFile == null) {
-                System.out.println("No commit with that id exists.");
-                return;
-            }
+           commitID = getFullID(commitID);
+           if (commitID == null) {
+               System.out.println("No commit with that id exists.");
+               return;
+           }
         }
 
         // check untracked file
@@ -711,6 +726,9 @@ public class Repository {
                 checkout(commitID, file.getName());
             }
         }
+
+        // clear the staging area
+        clearStagingArea();
     }
 
     public static void main(String[] args) {
