@@ -197,6 +197,9 @@ public class Repository {
     public static void setBranchHead(String branchName, String commitID) {
         writeContents(Utils.join(BRANCHES_DIR, branchName), commitID);
     }
+    public static String getBranchHead(String branchName) {
+        return readContentsAsString(Utils.join(BRANCHES_DIR, branchName));
+    }
     public static String getHEADCommitID() {
         String headBranch = Utils.readContentsAsString(HEAD);
         File branchFile = Utils.join(BRANCHES_DIR, headBranch);
@@ -482,6 +485,19 @@ public class Repository {
         writeContents(f,b.getContent());
     }
 
+    public static  <T> Set<T> intersection(Set<T> set1, Set<T> set2) {
+        HashSet<T> result = new HashSet<>(set1);
+        result.retainAll(set2);
+        return result;
+    }
+
+    public static  <T> Set<T> difference(Set<T> set1, Set<T> set2) {
+        HashSet<T> result = new HashSet<>(set1);
+        result.removeAll(set2);
+        return result;
+    }
+
+
     public static void checkoutBranch(String branchName) {
         if (branchName.equals(getHEADBranch())) {
             System.out.println("No need to checkout the current branch.");
@@ -494,32 +510,36 @@ public class Repository {
       }
 
 
+      Set<String> CWDFileSet = new HashSet<>();
+      FileFilter filter = file -> file.isFile();
+      for (File f:CWD.listFiles(filter)) {
+          CWDFileSet.add(f.getName());
+      }
 
-        //failure case 3
-        HashMap<String, String> files = getHEADCommit().getTree();
+      Set<String> headFileSet = getHEADCommit().getTree().keySet();
+      Commit targetCommit = Commit.fromFile(Utils.join(COMMITS_DIR,getBranchHead(branchName)));
+      Set<String> commitFileSet = targetCommit.getTree().keySet();
+      Set<String> filesToDelete = difference(CWDFileSet, commitFileSet);
 
-        FileFilter filter = file -> file.isFile();
-        for (File f:CWD.listFiles(filter)) {
-            if (!files.keySet().contains(f.getName())) {
-                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
-                return;
-            }
+      // warn users about untracked files
+      if (!difference(CWDFileSet, headFileSet).isEmpty()) {
+          System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+          return;
+      }
+
+      // delete files
+      for (String fileName:filesToDelete) {
+            File fileToDelete = Utils.join(CWD, fileName);
+            fileToDelete.delete();
+      }
+
+      // overwrite files
+        for (String fileName:commitFileSet) {
+            Blob blobFile = Blob.readBlob(Utils.join(BLOBS_DIR, targetCommit.getTree().get(fileName)));
+            File saveToFile = Utils.join(CWD, fileName);
+            blobFile.toOriginalFile(saveToFile);
         }
-        // set the head branch
-        setHeadBranch(branchName);
-        // get the lists of files at branch head
-        files = getHEADCommit().getTree();
-
-        for (File f:CWD.listFiles(filter)) {
-            if (!files.keySet().contains(f.getName())) {
-                f.delete();
-            } else {
-                Blob b = Blob.readBlob( Utils.join(BLOBS_DIR, files.get(f.getName())));
-                //overwrites cwd file with head commit of that branch
-                b.toOriginalFile(Utils.join(CWD, f.getName()));
-            }
-        }
-
+        updateHEADBranch(branchName);
         clearStagingArea();
     }
     public static void clearStagingArea() {
@@ -542,8 +562,13 @@ public class Repository {
     }
 
     public static void branch(String branchName) {
+        if (!GITLET_DIR.exists()) {
+            System.out.println("Not in an initialized Gitlet directory.");
+            return;
+        }
+
         for (File branch:BRANCHES_DIR.listFiles()) {
-            if (branch.equals(branchName)) {
+            if (branch.getName().equals(branchName)) {
                 System.out.println("A branch with that name already exists.");
                 return;
             }
@@ -569,6 +594,11 @@ public class Repository {
         return match;
     }
     public static void removeBranch(String branchName) {
+        if (!GITLET_DIR.exists()) {
+            System.out.println("Not in an initialized Gitlet directory.");
+            return;
+        }
+
         if (branchName.equals(getHEADBranch())) {
             System.out.println("Cannot remove the current branch.");
             return;
@@ -582,6 +612,11 @@ public class Repository {
     }
 
     public static void reset(String commitID) {
+        if (!GITLET_DIR.exists()) {
+            System.out.println("Not in an initialized Gitlet directory.");
+            return;
+        }
+
         // Check if commits id is real
         if (commitID.length() >= 40) {
             File commitFile = Utils.join(COMMITS_DIR,commitID);
@@ -637,6 +672,10 @@ public class Repository {
     }
 
     public static void main(String[] args) {
-
+        File f = Utils.join("C:\\Users\\daiyu\\Desktop\\test-gitlet\\.gitlet\\commits\\9b75ad9a5a2c871163f64180627456b8e0824900");
+        Commit c = Commit.fromFile(f);
+        for (String s:c.getTree().keySet()) {
+            System.out.println(s);
+        }
     }
 }
