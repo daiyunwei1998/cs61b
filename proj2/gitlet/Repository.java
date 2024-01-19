@@ -206,6 +206,7 @@ public class Repository {
         writeContents(Utils.join(BRANCHES_DIR, branchName), commitID);
     }
     public static String getBranchHead(String branchName) {
+        // returns the commit id of that branch's current 'head'
         return readContentsAsString(Utils.join(BRANCHES_DIR, branchName));
     }
     public static String getHEADCommitID() {
@@ -373,10 +374,19 @@ public class Repository {
 
         while (!"".equals(c.getParentID())) {
             String formattedDate = dateFormat.format(c.getTimestamp());
-            System.out.printf("===\ncommit %s\nDate: %s\n%s\n\n",
-                    c.getSHA1(),
-                    formattedDate,
-                    c.getMessage());
+            if(c instanceof MergedCommit) {
+                System.out.printf("===\ncommit %s\nMerge: %s %s\nDate: %s\n%s\n\n",
+                        c.getSHA1(),
+                        ((MergedCommit) c).getFirstParentID(),
+                        ((MergedCommit) c).getSecondParentID(),
+                        formattedDate,
+                        c.getMessage());
+            } else {
+                System.out.printf("===\ncommit %s\nDate: %s\n%s\n\n",
+                        c.getSHA1(),
+                        formattedDate,
+                        c.getMessage());
+            }
 
             File commitFile = Utils.join(Repository.COMMITS_DIR, c.getParentID());
 
@@ -391,10 +401,19 @@ public class Repository {
 
         // Print information for the initial commit
         String formattedDate = dateFormat.format(c.getTimestamp());
-        System.out.printf("===\ncommit %s\nDate: %s\n%s\n\n",
-                c.getSHA1(),
-                formattedDate,
-                c.getMessage());
+        if(c instanceof MergedCommit) {
+            System.out.printf("===\ncommit %s\nMerge: %s %s\nDate: %s\n%s\n\n",
+                    c.getSHA1(),
+                    ((MergedCommit) c).getFirstParentID(),
+                    ((MergedCommit) c).getSecondParentID(),
+                    formattedDate,
+                    c.getMessage());
+        } else {
+            System.out.printf("===\ncommit %s\nDate: %s\n%s\n\n",
+                    c.getSHA1(),
+                    formattedDate,
+                    c.getMessage());
+        }
     }
 
     public static void globalLog() {
@@ -702,12 +721,11 @@ public class Repository {
             return;
         }
 
-        for (File branch:BRANCHES_DIR.listFiles()) {
-            if (branch.getName().equals(branchName)) {
-                System.out.println("A branch with that name already exists.");
-                return;
-            }
+        if (branchExist(branchName)) {
+            System.out.println("A branch with that name already exists.");
+            return;
         }
+
         File branchFile = Utils.join(BRANCHES_DIR,branchName);
         String headCommit = getHEADCommitID();
         try {
@@ -804,6 +822,64 @@ public class Repository {
 
         // clear the staging area
         clearStagingArea();
+    }
+
+    public static void merge(String otherBranch) {
+        // check if merge is necessary
+        if (UncommittedExist()) {
+            System.out.println("You have uncommitted changes.");
+            return;
+        }
+        if (getHEADBranch().equals(otherBranch)) {
+            System.out.println("Cannot merge a branch with itself.");
+            return;
+        }
+        if (!branchExist(otherBranch)) {
+            System.out.println("A branch with that name does not exist.");
+            return;
+        }
+        String LCA = LatestCommonAncestor(getHEADBranch(),otherBranch);
+        if (otherBranch.equals(LCA)) {
+            System.out.println("Given branch is an ancestor of the current branch.");
+        }
+
+        // case: fast-forward current branch
+        if (LCA.equals(getHEADBranch())) {
+            checkoutBranch(otherBranch);
+            System.out.println("Current branch fast-forwarded.");
+        }
+
+    }
+
+    private static boolean UncommittedExist() {
+        // check if any uncommitted changes
+        Index addIndex = Index.fromFile(ADD_INDEX);
+        Index removeIndex = Index.fromFile(REMOVE_INDEX);
+
+        if (addIndex.isEmpty() && removeIndex.isEmpty()) {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+    private static String LatestCommonAncestor(String branchA, String branchB) {
+        // get latest common ancestor
+        // algorithmn: Leetcode 160. Intersection of Two Linked Lists
+        String CommitA = getBranchHead(branchA);
+        String CommitB = getBranchHead(branchB);
+
+        while(!CommitA.equals(CommitB)) {
+            CommitA = Commit.fromFile(Utils.join(COMMITS_DIR, CommitA)).getParentID();
+            CommitB = Commit.fromFile(Utils.join(COMMITS_DIR, CommitB)).getParentID();
+            if (CommitA == null) {
+                CommitA = getBranchHead(branchB);
+            }
+            if (CommitB == null) {
+                CommitB = getBranchHead(branchA);
+            }
+        }
+        return CommitA;
     }
 
     public static void main(String[] args) {

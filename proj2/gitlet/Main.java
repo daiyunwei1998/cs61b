@@ -111,7 +111,11 @@ public class Main {
                 }
                 break;
             case "merge":
-                //TODO merge
+                if (args.length != 2) {
+                    System.out.println("Incorrect operands.");
+                } else {
+                    Repository.merge(args[1]);
+                }
                 break;
             default:
                 System.out.println("No command with that name exists.");
