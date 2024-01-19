@@ -187,8 +187,7 @@ public class Repository {
     }
 
     public static void updateHEADCommit(String commitHash) {
-        String headBranch = Utils.readContentsAsString(HEAD);
-        File branchFile = Utils.join(BRANCHES_DIR, headBranch);
+        File branchFile = Utils.join(BRANCHES_DIR, getHEADBranch());
         Utils.writeContents(branchFile, commitHash);
     }
     public static void updateHEADBranch(String branch) {
@@ -319,6 +318,62 @@ public class Repository {
         updateHEADCommit(newCommit.getSHA1()); //todo behavior is changed
     }
 
+    public static void commitMerge(Commit firstParent, String firstParentBranch,
+                                   Commit secondParent, String secondParentBranch) {
+
+        // make a new commit object
+        Commit newCommit = new MergedCommit(firstParent, firstParentBranch, secondParent, secondParentBranch);
+
+        // update staging area
+        // read indexes
+        Index addIndex = Index.fromFile(ADD_INDEX);
+        Index removeIndex = Index.fromFile(REMOVE_INDEX);
+        Index tracked = Index.fromFile(TRACKED);
+
+        // check if nothing changes
+        if (addIndex.size() ==0 & removeIndex.size() == 0) {
+            //System.out.println("No changes added to the commit.");
+            //return; //todo get it back
+        }
+
+        // add files
+        Set<String> filesToAdd = new HashSet<>();
+
+        Iterator<String> it = addIndex.getEntries().keySet().iterator();
+        while (it.hasNext()) {
+            String key = it.next();
+            filesToAdd.add(addIndex.get(key));
+            newCommit.addFile(key,addIndex.get(key));
+            tracked.addEntry(key, ""); // don't have to store version info
+            it.remove();
+        }
+        addIndex.toFile(ADD_INDEX);
+        tracked.toFile(TRACKED);
+
+        for (String blobName:filesToAdd) {
+            File oldFile = Utils.join(ADD_DIR, blobName);
+            File newFile = Utils.join(BLOBS_DIR,blobName);
+            boolean status = oldFile.renameTo(newFile);
+            if (!status) {
+                System.out.println("Commiting staged files unsuccessfully");
+            }
+        }
+
+        // remove files
+        for (String fileName:removeIndex.getEntries().keySet()) {
+            // untrack from commit
+            newCommit.removeFIle(fileName);
+            // remove from removeIndex
+            removeIndex.removeEntry(fileName);
+        }
+        removeIndex.toFile(REMOVE_INDEX);
+
+
+        // save new commit
+        newCommit.toFile();
+        // update HEAD
+        updateHEADCommit(newCommit.getSHA1()); //todo behavior is changed
+    }
     public static void rm(String fileName) {
         // todo remove
         if (!GITLET_DIR.exists()) {
@@ -375,7 +430,7 @@ public class Repository {
         while (!"".equals(c.getParentID())) {
             String formattedDate = dateFormat.format(c.getTimestamp());
             if(c instanceof MergedCommit) {
-                System.out.printf("===\ncommit %s\nMerge: %s %s\nDate: %s\n%s\n\n",
+                System.out.printf("===\ncommit %s\nMerge: %.7s %.7s\nDate: %s\n%s\n\n",
                         c.getSHA1(),
                         ((MergedCommit) c).getFirstParentID(),
                         ((MergedCommit) c).getSecondParentID(),
@@ -429,10 +484,19 @@ public class Repository {
         for (File commitFile:commitFiles) {
             Commit c = Commit.fromFile(commitFile);
             String formattedDate = dateFormat.format(c.getTimestamp());
-            System.out.printf("===\ncommit %s\nDate: %s\n%s\n\n",
-                    c.getSHA1(),
-                    formattedDate,
-                    c.getMessage());
+            if(c instanceof MergedCommit) {
+                System.out.printf("===\ncommit %s\nMerge: %.7s %.7s\nDate: %s\n%s\n\n",
+                        c.getSHA1(),
+                        ((MergedCommit) c).getFirstParentID(),
+                        ((MergedCommit) c).getSecondParentID(),
+                        formattedDate,
+                        c.getMessage());
+            } else {
+                System.out.printf("===\ncommit %s\nDate: %s\n%s\n\n",
+                        c.getSHA1(),
+                        formattedDate,
+                        c.getMessage());
+            }
         }
     }
 
@@ -717,7 +781,7 @@ public class Repository {
 
     public static void branch(String branchName) {
         if (!GITLET_DIR.exists()) {
-            System.out.println("Not in an initialized Gitlet directory.");
+            System.out.println("Not in an in4itialized Gitlet directory.");
             return;
         }
 
@@ -839,7 +903,9 @@ public class Repository {
             return;
         }
         String LCA = LatestCommonAncestor(getHEADBranch(),otherBranch);
-        if (otherBranch.equals(LCA)) {
+        System.out.println("LCA:"+LCA); // todo delete
+        System.out.println("other:"+getBranchHead(otherBranch)); // todo delete
+        if (getBranchHead(otherBranch).equals(LCA)) {
             System.out.println("Given branch is an ancestor of the current branch.");
         }
 
@@ -849,6 +915,13 @@ public class Repository {
             System.out.println("Current branch fast-forwarded.");
         }
 
+        Commit firstParent = getHEADCommit();
+        String firstParentBranch = getHEADBranch();
+        Commit secondParent = Commit.fromFile(Utils.join(COMMITS_DIR, getBranchHead(otherBranch)));
+
+        // commit
+        commitMerge(firstParent, firstParentBranch, secondParent, otherBranch);
+
     }
 
     private static boolean UncommittedExist() {
@@ -857,9 +930,9 @@ public class Repository {
         Index removeIndex = Index.fromFile(REMOVE_INDEX);
 
         if (addIndex.isEmpty() && removeIndex.isEmpty()) {
-            return true;
-        } else {
             return false;
+        } else {
+            return true;
         }
 
     }
