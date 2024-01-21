@@ -907,16 +907,30 @@ public class Repository {
             System.out.println("Given branch is an ancestor of the current branch.");
         }
 
-        // case: fast-forward current branch
-        if (LCA.equals(getHEADBranch())) {
-            checkoutBranch(otherBranch);
-            System.out.println("Current branch fast-forwarded.");
+        // check if untracked file exist
+        Set<String> CWDFileSet = new HashSet<>();
+        FileFilter filter = file -> file.isFile();
+        for (File f:CWD.listFiles(filter)) {
+            CWDFileSet.add(f.getName());
         }
 
         Commit firstParent = getHEADCommit();
         String firstParentBranch = getHEADBranch();
         Commit secondParent = Commit.fromFile(Utils.join(COMMITS_DIR, getBranchHead(otherBranch)));
         Commit splitPoint = Commit.fromFile(Utils.join(COMMITS_DIR, LCA));
+        boolean conflicted = false;
+
+        Set<String> untracked = difference(CWDFileSet, firstParent.getTree().keySet());
+        if (!untracked.isEmpty()) {
+            System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+        }
+
+        // case: fast-forward current branch
+        if (LCA.equals(getHEADBranch())) {
+            checkoutBranch(otherBranch);
+            System.out.println("Current branch fast-forwarded.");
+        }
+
 
         for (String fileName: splitPoint.getTree().keySet()) {
             // Condition: deleted
@@ -930,6 +944,7 @@ public class Repository {
                 if (versionChanged(fileName, secondParent, splitPoint)) {
                     // if modified in other branch
                     mergeConflict(fileName, firstParent, secondParent);
+                    conflicted = true;
                     continue;
                 } else {
                     // if not modified in other branch, remain absent
@@ -940,6 +955,7 @@ public class Repository {
                 if (versionChanged(fileName, firstParent, splitPoint)) {
                     // if modified in current branch
                     mergeConflict(fileName, firstParent, secondParent);
+                    conflicted = true;
                     continue;
                 } else {
                     // if not modified in current branch, remove
@@ -958,6 +974,7 @@ public class Repository {
                 // not in the same way
                 if (!Objects.equals(firstParent.getFileVersion(fileName), secondParent.getFileVersion(fileName))) {
                     mergeConflict(fileName, firstParent, secondParent);
+                    conflicted = true;
                     continue;
                 }
             }
@@ -985,6 +1002,7 @@ public class Repository {
             } else {
                 // if not same content
                 mergeConflict(fileName, firstParent, secondParent);
+                conflicted = true;
                 continue;
             }
         }
@@ -998,6 +1016,11 @@ public class Repository {
         // commit
         commitMerge(firstParent, firstParentBranch, secondParent, otherBranch);
 
+        // if any file has a merge conflict
+        if (conflicted) {
+            System.out.println("Encountered a merge conflict.");
+        }
+
     }
 
     private static void mergeConflict(String fileName, Commit firstParent, Commit secondParent) {
@@ -1008,6 +1031,7 @@ public class Repository {
         output.append(">>>>>>>");
         File newFile = Utils.join(CWD, fileName);
         writeContents(newFile, output.toString());
+        add(fileName);
     }
 
     private static boolean UncommittedExist() {
