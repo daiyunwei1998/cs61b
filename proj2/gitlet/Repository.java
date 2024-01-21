@@ -282,6 +282,7 @@ public class Repository {
             Set<String> filesToAdd = new HashSet<>();
 
             Iterator<String> it = addIndex.getEntries().keySet().iterator();
+            // process item by item and remove items after processed
             while (it.hasNext()) {
                 String key = it.next();
                 filesToAdd.add(addIndex.get(key));
@@ -289,6 +290,7 @@ public class Repository {
                 tracked.addEntry(key, ""); // don't have to store version info
                 it.remove();
             }
+            // save the empty Index objects as files
             addIndex.toFile(ADD_INDEX);
             tracked.toFile(TRACKED);
 
@@ -973,9 +975,8 @@ public class Repository {
                 // in the same way
                 if (Objects.equals(firstParent.getFileVersion(fileName), secondParent.getFileVersion(fileName))) {
                     continue;
-                }
-                // not in the same way
-                if (!Objects.equals(firstParent.getFileVersion(fileName), secondParent.getFileVersion(fileName))) {
+                } else {
+                    // not in the same way
                     mergeConflict(fileName, firstParent, secondParent);
                     conflicted = true;
                     continue;
