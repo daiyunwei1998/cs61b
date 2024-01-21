@@ -903,8 +903,6 @@ public class Repository {
             return;
         }
         String LCA = LatestCommonAncestor(getHEADBranch(),otherBranch);
-        System.out.println("LCA:"+LCA); // todo delete
-        System.out.println("other:"+getBranchHead(otherBranch)); // todo delete
         if (getBranchHead(otherBranch).equals(LCA)) {
             System.out.println("Given branch is an ancestor of the current branch.");
         }
@@ -918,10 +916,98 @@ public class Repository {
         Commit firstParent = getHEADCommit();
         String firstParentBranch = getHEADBranch();
         Commit secondParent = Commit.fromFile(Utils.join(COMMITS_DIR, getBranchHead(otherBranch)));
+        Commit splitPoint = Commit.fromFile(Utils.join(COMMITS_DIR, LCA));
+
+        for (String fileName: splitPoint.getTree().keySet()) {
+            // Condition: deleted
+                // if deleted in both branch
+            if (!firstParent.containsFile(fileName) && !secondParent.containsFile(fileName) ) {
+                continue;
+            }
+                // deleted in either
+            if (!firstParent.containsFile(fileName)) {
+                // deleted in current branch
+                if (versionChanged(fileName, secondParent, splitPoint)) {
+                    // if modified in other branch
+                    mergeConflict(fileName, firstParent, secondParent);
+                    continue;
+                } else {
+                    // if not modified in other branch, remain absent
+                    continue;
+                }
+            } else if (!secondParent.containsFile(fileName)) {
+                // deleted in other branch
+                if (versionChanged(fileName, firstParent, splitPoint)) {
+                    // if modified in current branch
+                    mergeConflict(fileName, firstParent, secondParent);
+                    continue;
+                } else {
+                    // if not modified in current branch, remove
+                    rm(fileName);
+                    continue;
+                }
+            }
+
+            // if both modified
+            if (versionChanged(fileName, firstParent, splitPoint) &&
+            versionChanged(fileName, secondParent, splitPoint)) {
+                // in the same way
+                if (Objects.equals(firstParent.getFileVersion(fileName), secondParent.getFileVersion(fileName))) {
+                    continue;
+                }
+                // not in the same way
+                if (!Objects.equals(firstParent.getFileVersion(fileName), secondParent.getFileVersion(fileName))) {
+                    mergeConflict(fileName, firstParent, secondParent);
+                    continue;
+                }
+            }
+
+            // if either modified
+            if (versionChanged(fileName, firstParent, splitPoint)) {
+                // if changed in current branch
+                continue;
+            } else if (versionChanged(fileName, secondParent, splitPoint)) {
+                // if changed in given branch
+                checkout(secondParent.getSHA1(), fileName);
+                add(fileName);
+                continue;
+            }
+        } // end of for loop
+
+        Set<String> newlyAddedInCurrent = difference(firstParent.getTree().keySet(),splitPoint.getTree().keySet());
+        Set<String> newlyAddedInOther = difference(secondParent.getTree().keySet(),splitPoint.getTree().keySet());
+        // newly added in both branch
+        Set<String> newlyAddedInBoth = intersection(newlyAddedInCurrent, newlyAddedInOther);
+        for (String fileName:newlyAddedInBoth) {
+            // if same content
+            if (firstParent.getFileVersion(fileName).equals(secondParent.getFileVersion(fileName))) {
+                continue;
+            } else {
+                // if not same content
+                mergeConflict(fileName, firstParent, secondParent);
+                continue;
+            }
+        }
+        // newly added in current branch: do nothing
+        // newly added in given branch
+        for (String fileName:difference(newlyAddedInOther, newlyAddedInBoth)) {
+            checkout(secondParent.getSHA1(), fileName);
+            add(fileName);
+        }
 
         // commit
         commitMerge(firstParent, firstParentBranch, secondParent, otherBranch);
 
+    }
+
+    private static void mergeConflict(String fileName, Commit firstParent, Commit secondParent) {
+        StringBuilder output = new StringBuilder("<<<<<<< HEAD\n");
+        output.append(Blob.readBlob(Utils.join(BLOBS_DIR, firstParent.getFileVersion(fileName))).getContent());
+        output.append("=======\n");
+        output.append(Blob.readBlob(Utils.join(BLOBS_DIR, secondParent.getFileVersion(fileName))).getContent());
+        output.append(">>>>>>>");
+        File newFile = Utils.join(CWD, fileName);
+        writeContents(newFile, output.toString());
     }
 
     private static boolean UncommittedExist() {
@@ -936,6 +1022,27 @@ public class Repository {
         }
 
     }
+
+    private static boolean versionChanged(String fileName, Commit commit1, Commit commit2) {
+        /*returns true if the file version is different in the commits specified
+        * note that if absent in either commits will return true */
+
+        if (!commit1.containsFile(fileName) && !commit2.containsFile(fileName)) {
+            return false;
+        }
+        if (!commit1.containsFile(fileName) || commit2.containsFile(fileName)) {
+            return true;
+        }
+
+        String version1 = commit1.getVersion(fileName);
+        String version2 = commit2.getVersion(fileName);
+        if (version1.equals(version2)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     private static String LatestCommonAncestor(String branchA, String branchB) {
         // get latest common ancestor
         // algorithmn: Leetcode 160. Intersection of Two Linked Lists
