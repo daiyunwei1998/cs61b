@@ -930,7 +930,7 @@ public class Repository {
         }
 
         // case: fast-forward current branch
-        if (LCA.equals(getHEADBranch())) {
+        if (LCA.equals(getHEADCommitID())) {
             checkoutBranch(otherBranch);
             System.out.println("Current branch fast-forwarded.");
             return;
