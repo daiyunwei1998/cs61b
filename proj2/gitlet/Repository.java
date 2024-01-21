@@ -1028,9 +1028,16 @@ public class Repository {
 
     private static void mergeConflict(String fileName, Commit firstParent, Commit secondParent) {
         StringBuilder output = new StringBuilder("<<<<<<< HEAD\n");
-        output.append(Blob.readBlob(Utils.join(BLOBS_DIR, firstParent.getFileVersion(fileName))).getContent());
+        if (firstParent.getFileVersion(fileName) != null) {
+            File currentVersionFile = Utils.join(BLOBS_DIR, firstParent.getFileVersion(fileName));
+            output.append(Blob.readBlob(currentVersionFile).getContent());
+        }
         output.append("=======\n");
-        output.append(Blob.readBlob(Utils.join(BLOBS_DIR, secondParent.getFileVersion(fileName))).getContent());
+
+        if (secondParent.getFileVersion(fileName) != null) {
+            File givenBranchVersionFile = Utils.join(BLOBS_DIR, secondParent.getFileVersion(fileName));
+            output.append(Blob.readBlob(givenBranchVersionFile).getContent());
+        }
         output.append(">>>>>>>");
         File newFile = Utils.join(CWD, fileName);
         writeContents(newFile, output.toString());
