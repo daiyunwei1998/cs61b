@@ -905,6 +905,7 @@ public class Repository {
         String LCA = LatestCommonAncestor(getHEADBranch(),otherBranch);
         if (getBranchHead(otherBranch).equals(LCA)) {
             System.out.println("Given branch is an ancestor of the current branch.");
+            return;
         }
 
         // check if untracked file exist
@@ -923,12 +924,14 @@ public class Repository {
         Set<String> untracked = difference(CWDFileSet, firstParent.getTree().keySet());
         if (!untracked.isEmpty()) {
             System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+            return;
         }
 
         // case: fast-forward current branch
         if (LCA.equals(getHEADBranch())) {
             checkoutBranch(otherBranch);
             System.out.println("Current branch fast-forwarded.");
+            return;
         }
 
 
