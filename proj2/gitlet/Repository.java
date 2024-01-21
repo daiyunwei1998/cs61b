@@ -1064,7 +1064,7 @@ public class Repository {
         if (!commit1.containsFile(fileName) && !commit2.containsFile(fileName)) {
             return false;
         }
-        if (!commit1.containsFile(fileName) || commit2.containsFile(fileName)) {
+        if (!commit1.containsFile(fileName) || !commit2.containsFile(fileName)) {
             return true;
         }
 
