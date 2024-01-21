@@ -1079,10 +1079,10 @@ public class Repository {
         while(!CommitA.equals(CommitB)) {
             CommitA = Commit.fromFile(Utils.join(COMMITS_DIR, CommitA)).getParentID();
             CommitB = Commit.fromFile(Utils.join(COMMITS_DIR, CommitB)).getParentID();
-            if (CommitA == null) {
+            if (Objects.equals(CommitA, "")) {
                 CommitA = getBranchHead(branchB);
             }
-            if (CommitB == null) {
+            if (Objects.equals(CommitB, "")) {
                 CommitB = getBranchHead(branchA);
             }
         }
