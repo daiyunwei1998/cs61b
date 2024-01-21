@@ -1039,7 +1039,7 @@ public class Repository {
             File givenBranchVersionFile = Utils.join(BLOBS_DIR, secondParent.getFileVersion(fileName));
             output.append(Blob.readBlob(givenBranchVersionFile).getContent());
         }
-        output.append(">>>>>>>");
+        output.append(">>>>>>>\n");
         File newFile = Utils.join(CWD, fileName);
         writeContents(newFile, output.toString());
         add(fileName);
@@ -1098,10 +1098,8 @@ public class Repository {
     }
 
     public static void main(String[] args) {
-        File f = Utils.join("C:\\Users\\daiyu\\Desktop\\test-gitlet\\.gitlet\\commits\\475d8e9d89b1432fcc6f9aee0ea8df78b2d9b7d0");
-        Commit c = Commit.fromFile(f);
-        for (String s:c.getTree().keySet()) {
-            System.out.println(s);
-        }
+        File f = Utils.join("C:\\Users\\daiyu\\Desktop\\test-gitlet\\.gitlet\\blobs\\939417e4103cb672c5d0ad56c27c7d3308b202c7");
+        Blob b = Blob.readBlob(f);
+        System.out.println(b.getFileName());
     }
 }
