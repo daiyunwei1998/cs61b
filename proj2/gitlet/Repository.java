@@ -298,9 +298,9 @@ public class Repository {
                 File oldFile = Utils.join(ADD_DIR, blobName);
                 File newFile = Utils.join(BLOBS_DIR,blobName);
                 boolean status = oldFile.renameTo(newFile);
-                if (!status) {
+                /*if (!status) {
                     System.out.println("Commiting staged files unsuccessfully");
-                }
+                }*/
             }
 
             // remove files
@@ -317,7 +317,7 @@ public class Repository {
         // save new commit
         newCommit.toFile();
         // update HEAD
-        updateHEADCommit(newCommit.getSHA1()); //todo behavior is changed
+        updateHEADCommit(newCommit.getSHA1());
     }
 
     public static void commitMerge(Commit firstParent, String firstParentBranch,
@@ -334,8 +334,8 @@ public class Repository {
 
         // check if nothing changes
         if (addIndex.size() ==0 & removeIndex.size() == 0) {
-            //System.out.println("No changes added to the commit.");
-            //return; //todo get it back
+            System.out.println("No changes added to the commit.");
+            return;
         }
 
         // add files
@@ -356,9 +356,9 @@ public class Repository {
             File oldFile = Utils.join(ADD_DIR, blobName);
             File newFile = Utils.join(BLOBS_DIR,blobName);
             boolean status = oldFile.renameTo(newFile);
-            if (!status) {
+           /* if (!status) {
                 System.out.println("Commiting staged files unsuccessfully");
-            }
+            }*/
         }
 
         // remove files
@@ -374,7 +374,7 @@ public class Repository {
         // save new commit
         newCommit.toFile();
         // update HEAD
-        updateHEADCommit(newCommit.getSHA1()); //todo behavior is changed
+        updateHEADCommit(newCommit.getSHA1());
     }
     public static void rm(String fileName) {
         // todo remove
@@ -905,6 +905,7 @@ public class Repository {
             return;
         }
         String LCA = LatestCommonAncestor(getHEADBranch(),otherBranch);
+        System.out.println(LCA); // todo: delete debug only
         if (getBranchHead(otherBranch).equals(LCA)) {
             System.out.println("Given branch is an ancestor of the current branch.");
             return;
