@@ -298,9 +298,9 @@ public class Repository {
                 File oldFile = Utils.join(ADD_DIR, blobName);
                 File newFile = Utils.join(BLOBS_DIR,blobName);
                 boolean status = oldFile.renameTo(newFile);
-                if (!status) {
+                /*if (!status) {
                     System.out.println("Commiting staged files unsuccessfully");
-                }
+                }*/
             }
 
             // remove files
@@ -317,7 +317,7 @@ public class Repository {
         // save new commit
         newCommit.toFile();
         // update HEAD
-        updateHEADCommit(newCommit.getSHA1()); //todo behavior is changed
+        updateHEADCommit(newCommit.getSHA1());
     }
 
     public static void commitMerge(Commit firstParent, String firstParentBranch,
@@ -334,8 +334,8 @@ public class Repository {
 
         // check if nothing changes
         if (addIndex.size() ==0 & removeIndex.size() == 0) {
-            //System.out.println("No changes added to the commit.");
-            //return; //todo get it back
+            System.out.println("No changes added to the commit.");
+            return;
         }
 
         // add files
@@ -356,9 +356,9 @@ public class Repository {
             File oldFile = Utils.join(ADD_DIR, blobName);
             File newFile = Utils.join(BLOBS_DIR,blobName);
             boolean status = oldFile.renameTo(newFile);
-            if (!status) {
+           /* if (!status) {
                 System.out.println("Commiting staged files unsuccessfully");
-            }
+            }*/
         }
 
         // remove files
@@ -374,7 +374,7 @@ public class Repository {
         // save new commit
         newCommit.toFile();
         // update HEAD
-        updateHEADCommit(newCommit.getSHA1()); //todo behavior is changed
+        updateHEADCommit(newCommit.getSHA1());
     }
     public static void rm(String fileName) {
         // todo remove
@@ -1078,23 +1078,60 @@ public class Repository {
         }
     }
 
-    private static String LatestCommonAncestor(String branchA, String branchB) {
-        // get latest common ancestor
-        // algorithmn: Leetcode 160. Intersection of Two Linked Lists
-        String CommitA = getBranchHead(branchA);
-        String CommitB = getBranchHead(branchB);
 
-        while(!CommitA.equals(CommitB)) {
-            CommitA = Commit.fromFile(Utils.join(COMMITS_DIR, CommitA)).getParentID();
-            CommitB = Commit.fromFile(Utils.join(COMMITS_DIR, CommitB)).getParentID();
-            if (Objects.equals(CommitA, "")) {
-                CommitA = getBranchHead(branchB);
+    public static String LatestCommonAncestor(String branchA, String branchB) {
+        /* get latest common ancestor*/
+
+        // create a symbol table that stores ancestors of branchA after BFS
+        HashMap<String, Integer> table = new HashMap<>();
+
+        // BFS: Initialize the fringe
+        Queue<String> fringe = new LinkedList<String>();
+
+        // BFS level-order transversal
+        fringe.offer(getBranchHead(branchA));
+        int dist = 0;
+        while (!fringe.isEmpty()) {
+            String commitID = fringe.peek();
+            Commit c = Commit.fromFile(Utils.join(COMMITS_DIR, commitID));
+            if (!table.containsKey(c.getSHA1())) {
+                // if not transversed
+                dist += 1;
+                table.put(c.getSHA1(), dist);
+                if (c instanceof MergedCommit) {
+                    fringe.offer(((MergedCommit) c).getFirstParentID());
+                    fringe.offer(((MergedCommit) c).getSecondParentID());
+                } else {
+                    if (!c.getParentID().equals("")) {
+                        fringe.offer(c.getParentID());
+                    }
+                }
             }
-            if (Objects.equals(CommitB, "")) {
-                CommitB = getBranchHead(branchA);
-            }
+            fringe.poll(); // remove first
         }
-        return CommitA;
+
+        fringe.offer(getBranchHead(branchB));
+        HashSet<String> traversed = new HashSet<>();
+        // another BFS, reusing finge queue since it's empty
+        while (!fringe.isEmpty()) {
+            String currentKey = fringe.peek();
+            if (!traversed.contains(currentKey)) {
+                traversed.add(currentKey);
+                if (table.containsKey(currentKey)) {return currentKey;}
+                Commit c = Commit.fromFile(Utils.join(COMMITS_DIR, currentKey));
+                if (c instanceof MergedCommit) {
+                    fringe.offer(((MergedCommit) c).getFirstParentID());
+                    fringe.offer(((MergedCommit) c).getSecondParentID());
+                } else {
+                    if (!c.getParentID().equals("")) {
+                        fringe.offer(c.getParentID());
+                    }
+                }
+            }
+            fringe.poll();
+        }
+
+        return "";
     }
 
     public static void main(String[] args) {
