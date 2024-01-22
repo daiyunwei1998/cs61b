@@ -304,12 +304,13 @@ public class Repository {
             }
 
             // remove files
-            for (String fileName:removeIndex.getEntries().keySet()) {
-                // untrack from commit
+            it = removeIndex.getEntries().keySet().iterator();
+            while (it.hasNext()) {
+                String fileName = it.next();
                 newCommit.removeFIle(fileName);
-                // remove from removeIndex
-                removeIndex.removeEntry(fileName);
+                it.remove();
             }
+
             removeIndex.toFile(REMOVE_INDEX);
 
         }
@@ -362,11 +363,11 @@ public class Repository {
         }
 
         // remove files
-        for (String fileName:removeIndex.getEntries().keySet()) {
-            // untrack from commit
+        it = removeIndex.getEntries().keySet().iterator();
+        while (it.hasNext()) {
+            String fileName = it.next();
             newCommit.removeFIle(fileName);
-            // remove from removeIndex
-            removeIndex.removeEntry(fileName);
+            it.remove();
         }
         removeIndex.toFile(REMOVE_INDEX);
 
