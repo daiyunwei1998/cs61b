@@ -69,7 +69,6 @@ public class Main {
                 Repository.status();
                 break;
             case "checkout":
-                //TODO checkout
                 if (args.length == 3 && Objects.equals(args[1], "--")) {
                     // case 1
                     String filename = args[2];
