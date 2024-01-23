@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -196,6 +197,10 @@ public class Remote extends Repository{
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+    public static void pull(String remoteName, String branchName) {
+        fetch(remoteName, branchName);
+        merge(branchName);
     }
 
 

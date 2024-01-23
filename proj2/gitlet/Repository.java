@@ -205,6 +205,12 @@ public class Repository {
     }
     public static String getBranchHead(String branchName) {
         // returns the commit id of that branch's current 'head'
+        if (branchName.contains("/")) {
+            String[] parts = branchName.split("/");
+            String remoteName = parts[0];
+            String branch = parts[1];
+            return readContentsAsString(Utils.join(BRANCHES_DIR, remoteName, branch));
+        }
         return readContentsAsString(Utils.join(BRANCHES_DIR, branchName));
     }
     public static String getBranchHeadRemote(String remoteName, String branchName) {
@@ -1053,7 +1059,7 @@ public class Repository {
 
     }
 
-    private static void mergeConflict(String fileName, Commit firstParent, Commit secondParent) {
+    public static void mergeConflict(String fileName, Commit firstParent, Commit secondParent) {
         StringBuilder output = new StringBuilder("<<<<<<< HEAD\n");
         if (firstParent.getFileVersion(fileName) != null) {
             File currentVersionFile = Utils.join(BLOBS_DIR, firstParent.getFileVersion(fileName));
@@ -1071,7 +1077,7 @@ public class Repository {
         add(fileName);
     }
 
-    private static boolean UncommittedExist() {
+    public static boolean UncommittedExist() {
         // check if any uncommitted changes
         Index addIndex = Index.fromFile(ADD_INDEX);
         Index removeIndex = Index.fromFile(REMOVE_INDEX);
@@ -1084,7 +1090,7 @@ public class Repository {
 
     }
 
-    private static boolean versionChanged(String fileName, Commit commit1, Commit commit2) {
+    public static boolean versionChanged(String fileName, Commit commit1, Commit commit2) {
         /*returns true if the file version is different in the commits specified
         * note that if absent in either commits will return true */
 

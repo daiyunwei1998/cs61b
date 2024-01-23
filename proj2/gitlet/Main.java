@@ -146,6 +146,11 @@ public class Main {
                 }
                 break;
             case "pull":
+                if (args.length != 3){
+                    System.out.println("Incorrect operands.");
+                } else {
+                    Remote.pull(args[1], args[2]);
+                }
                 break;
             default:
                 System.out.println("No command with that name exists.");
