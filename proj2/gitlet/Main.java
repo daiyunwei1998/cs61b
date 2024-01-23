@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
 
 
@@ -12,7 +13,7 @@ public class Main {
     /** Usage: java gitlet.Main ARGS, where ARGS contains
      *  <COMMAND> <OPERAND1> <OPERAND2> ... 
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         if (args.length == 0) {
             System.out.println("Please enter a command.");
             return;
@@ -115,6 +116,26 @@ public class Main {
                 } else {
                     Repository.merge(args[1]);
                 }
+                break;
+            case "add-remote":
+                if (args.length != 3){
+                    System.out.println("Incorrect operands.");
+                } else {
+                    Remote.addRemote(args[1], args[2]);
+                }
+                break;
+            case "rm-remote":
+                if (args.length != 2){
+                    System.out.println("Incorrect operands.");
+                } else {
+                    Remote.removeRemote(args[1]);
+                }
+                break;
+            case "push":
+                break;
+            case "fetch":
+                break;
+            case "pull":
                 break;
             default:
                 System.out.println("No command with that name exists.");

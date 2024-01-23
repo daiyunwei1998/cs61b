@@ -40,6 +40,7 @@ public class Repository {
     public static final File ADD_INDEX = Utils.join(ADD_DIR, "INDEX");
     public static final File REMOVE_INDEX = Utils.join(REMOVE_DIR, "INDEX");
     public static final File TRACKED = Utils.join(GITLET_DIR, "INDEX");
+    public static final File REMOTE = Utils.join(GITLET_DIR, "REMOTE");
 
     private static class Index implements Serializable {
         private HashMap<String, String> entries;
@@ -81,7 +82,7 @@ public class Repository {
     }
 
     /* TODO: fill in the rest of this class. */
-    public static void init() {
+    public static void init() throws IOException {
         // Check if .gitlet exist, if not, mkdir()
         if (GITLET_DIR.exists()) {
             System.out.println("A Gitlet version-control system already exists in the current directory.");
@@ -118,12 +119,14 @@ public class Repository {
         RemoveIndex.toFile(REMOVE_INDEX);
         Tracked.toFile(TRACKED);
 
+        // add remote
+        REMOTE.createNewFile();
+        HashMap<String, String> remoteMap = new HashMap<>();
+        writeObject(REMOTE, remoteMap);
+
         // initial commit
-        // todo delete Commit initial = new Commit("initial commit", null);
         Repository.commit("initial commit");
 
-        //TODO It will have a single branch: master, which initially points to this initial commit,
-        // and master will be the current branch.
     }
 
     public static boolean isTracked(String fileName) {
@@ -1134,6 +1137,7 @@ public class Repository {
 
         return "";
     }
+
 
     public static void main(String[] args) {
         File f = Utils.join("C:\\Users\\daiyu\\Desktop\\test-gitlet\\.gitlet\\blobs\\939417e4103cb672c5d0ad56c27c7d3308b202c7");
