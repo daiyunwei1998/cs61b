@@ -162,7 +162,7 @@ public class Remote extends Repository{
         return false;
     }
     public static String getRemoteBranchHead(String remoteName, String branchName) {
-        File remoteBranchDir = Utils.join(getRemoteDir(remoteName), "branches");
+        File remoteBranchDir = Utils.join(getRemoteDir(remoteName), "branches",remoteName);
         // returns the commit id of that branch's current 'head'
         return readContentsAsString(Utils.join(remoteBranchDir, branchName));
     }
