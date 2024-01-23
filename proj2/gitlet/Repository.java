@@ -691,13 +691,13 @@ public class Repository {
         writeContents(f, b.getContent());
     }
 
-    public static<T> Set<T> intersection(Set<T> set1, Set<T> set2) {
+    public static <T> Set<T> intersection(Set<T> set1, Set<T> set2) {
         HashSet<T> result = new HashSet<>(set1);
         result.retainAll(set2);
         return result;
     }
 
-    public static<T> Set<T> difference(Set<T> set1, Set<T> set2) {
+    public static <T> Set<T> difference(Set<T> set1, Set<T> set2) {
         HashSet<T> result = new HashSet<>(set1);
         result.removeAll(set2);
         return result;
@@ -871,17 +871,17 @@ public class Repository {
         }
 
         // check untracked file
-        Set<String> CWDFileSet = new HashSet<>();
+        Set<String> cwdFileSet = new HashSet<>();
         FileFilter filter = file -> file.isFile();
         for (File f:CWD.listFiles(filter)) {
-            CWDFileSet.add(f.getName());
+            cwdFileSet.add(f.getName());
         }
         Set<String> headFileSet = getHEADCommit().getTree().keySet();
         Set<String> commitFileSet = Commit.fromFile(
                 Utils.join(COMMITS_DIR, commitID)).getTree().keySet();
 
         // warn users about untracked files being overwritten
-        Set<String> untracked = difference(CWDFileSet, headFileSet);
+        Set<String> untracked = difference(cwdFileSet, headFileSet);
         if (!intersection(commitFileSet, untracked).isEmpty()) {
             System.out.println("There is an untracked file "
                     +  "in the way; delete it, or add and commit it first.");
@@ -894,7 +894,7 @@ public class Repository {
         // checkout files
         Commit c = Commit.fromFile(Utils.join(COMMITS_DIR, commitID));
         HashMap<String, String> tree =  c.getTree();
-        Set<String> filesToDelete = difference(CWDFileSet, tree.keySet());
+        Set<String> filesToDelete = difference(cwdFileSet, tree.keySet());
 
         for (String fileName: filesToDelete) {
             Utils.join(CWD, fileName).delete();
@@ -907,151 +907,126 @@ public class Repository {
         // clear the staging area
         clearStagingArea();
     }
-
-    public static void merge(String otherBranch) {
+    private static boolean checkMerge(String otherBranch) {
         // check if merge is necessary
         if (uncommittedExist()) {
             System.out.println("You have uncommitted changes.");
-            return;
+            return false;
         }
         if (getHEADBranch().equals(otherBranch)) {
             System.out.println("Cannot merge a branch with itself.");
-            return;
+            return false;
         }
         if (!branchExist(otherBranch)) {
             System.out.println("A branch with that name does not exist.");
-            return;
+            return false;
         }
-        String LCA = latestCommonAncestor(getHEADBranch(), otherBranch);
-        if (getBranchHead(otherBranch).equals(LCA)) {
+        String lca = latestCommonAncestor(getHEADBranch(), otherBranch);
+        if (getBranchHead(otherBranch).equals(lca)) {
             System.out.println(
                     "Given branch is an ancestor of the current branch.");
-            return;
+            return false;
         }
-
         // check if untracked file exist
         Set<String> cwdFileSet = new HashSet<>();
         FileFilter filter = file -> file.isFile();
         for (File f:CWD.listFiles(filter)) {
             cwdFileSet.add(f.getName());
         }
-
         Commit firstParent = getHEADCommit();
         String firstParentBranch = getHEADBranch();
         Commit secondParent = Commit.fromFile(
                 Utils.join(COMMITS_DIR, getBranchHead(otherBranch)));
-        Commit splitPoint = Commit.fromFile(Utils.join(COMMITS_DIR, LCA));
+        Commit splitPoint = Commit.fromFile(Utils.join(COMMITS_DIR, lca));
         boolean conflicted = false;
-
         Set<String> untracked = difference(cwdFileSet, firstParent.getTree().keySet());
         if (!untracked.isEmpty()) {
             System.out.println("There is an untracked file in the way;"
                     + " delete it, or add and commit it first.");
-            return;
+            return false;
         }
-
-        // case: fast-forward current branch
-        if (LCA.equals(getHEADCommitID())) {
+        return true;
+    }
+    public static void merge(String otherBranch) {
+        if (!checkMerge(otherBranch)) {
+            return;
+        };
+        String lca = latestCommonAncestor(getHEADBranch(), otherBranch);
+        Commit splitPoint = Commit.fromFile(Utils.join(COMMITS_DIR, lca));
+        Commit firstParent = getHEADCommit();
+        Commit secondParent = Commit.fromFile(
+                Utils.join(COMMITS_DIR, getBranchHead(otherBranch)));
+        boolean conflicted = false;
+        if (lca.equals(getHEADCommitID())) {
             checkoutBranch(otherBranch);
             System.out.println("Current branch fast-forwarded.");
             return;
         }
-
-
         for (String fileName: splitPoint.getTree().keySet()) {
             // Condition: deleted
-            // if deleted in both branch
-            if (!firstParent.containsFile(fileName)
+            if (!firstParent.containsFile(fileName) // deleted in both
                     && !secondParent.containsFile(fileName)) {
                 continue;
             }
-                // deleted in either
-            if (!firstParent.containsFile(fileName)) {
-                // deleted in current branch
+            if (!firstParent.containsFile(fileName)) { // deleted in current
                 if (versionChanged(fileName, secondParent, splitPoint)) {
-                    // if modified in other branch
                     mergeConflict(fileName, firstParent, secondParent);
                     conflicted = true;
                     continue;
                 } else {
-                    // if not modified in other branch, remain absent
                     continue;
                 }
-            } else if (!secondParent.containsFile(fileName)) {
-                // deleted in other branch
+            } else if (!secondParent.containsFile(fileName)) { // deleted in other
                 if (versionChanged(fileName, firstParent, splitPoint)) {
-                    // if modified in current branch
                     mergeConflict(fileName, firstParent, secondParent);
                     conflicted = true;
                     continue;
-                } else {
-                    // if not modified in current branch, remove
+                } else { // if not modified in current branch, remove
                     rm(fileName);
                     continue;
                 }
             }
-
-            // if both modified
             if (versionChanged(fileName, firstParent, splitPoint)
                 && versionChanged(fileName, secondParent, splitPoint)) {
-                // in the same way
                 if (Objects.equals(firstParent.getFileVersion(fileName),
                         secondParent.getFileVersion(fileName))) {
                     continue;
                 } else {
-                    // not in the same way
                     mergeConflict(fileName, firstParent, secondParent);
                     conflicted = true;
                     continue;
                 }
             }
-
             // if either modified
             if (versionChanged(fileName, firstParent, splitPoint)) {
-                // if changed in current branch
-                continue;
             } else if (versionChanged(fileName, secondParent, splitPoint)) {
-                // if changed in given branch
                 checkout(secondParent.getSHA1(), fileName);
                 add(fileName);
-                continue;
             }
         } // end of for loop
-
         Set<String> newlyAddedInCurrent = difference(
                 firstParent.getTree().keySet(), splitPoint.getTree().keySet());
         Set<String> newlyAddedInOther = difference(
                 secondParent.getTree().keySet(), splitPoint.getTree().keySet());
-        // newly added in both branch
         Set<String> newlyAddedInBoth = intersection(
                 newlyAddedInCurrent, newlyAddedInOther);
         for (String fileName:newlyAddedInBoth) {
-            // if same content
             if (firstParent.getFileVersion(fileName).equals(
                     secondParent.getFileVersion(fileName))) {
-                continue;
             } else {
-                // if not same content
                 mergeConflict(fileName, firstParent, secondParent);
                 conflicted = true;
-                continue;
             }
         }
-        // newly added in current branch: do nothing
-        // newly added in given branch
         for (String fileName:difference(newlyAddedInOther, newlyAddedInBoth)) {
             checkout(secondParent.getSHA1(), fileName);
             add(fileName);
         }
-
         // commit
-        commitMerge(firstParent, firstParentBranch, secondParent, otherBranch);
-
-        // if any file has a merge conflict
+        commitMerge(firstParent, getHEADBranch(), secondParent, otherBranch);
         if (conflicted) {
             System.out.println("Encountered a merge conflict.");
         }
-
     }
 
     public static void mergeConflict(
