@@ -90,6 +90,12 @@ public class Remote extends Repository{
             System.out.println("Remote directory not found.");
             return;
         }
+        File remoteDir = new File(remoteDirString);
+        if (!remoteDir.exists()) {
+            System.out.println("Remote directory not found.");
+            return;
+        }
+
         // check if remote branch exist
         if (!remoteBranchExist(remoteName, remoteBranchName)) {
             System.out.println("That remote does not have that branch.");
