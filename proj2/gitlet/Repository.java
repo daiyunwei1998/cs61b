@@ -40,49 +40,49 @@ public class Repository {
     public static final File ADD_INDEX = Utils.join(ADD_DIR, "INDEX");
     public static final File REMOVE_INDEX = Utils.join(REMOVE_DIR, "INDEX");
     public static final File TRACKED = Utils.join(GITLET_DIR, "INDEX");
-    public static final File REMOTE = Utils.join(GITLET_DIR, "REMOTE");
+    public static final File REMOTE_INDEX = Utils.join(GITLET_DIR, "REMOTE");
 
-    private static class Index implements Serializable {
+    public static class Index implements Serializable {
         private HashMap<String, String> entries;
 
 
-        private Index() {
+        public Index() {
             this.entries = new HashMap<String, String>();
         }
 
-        private static Index fromFile(File fileName) {
+        public static Index fromFile(File fileName) {
             return Utils.readObject(fileName,Index.class);
         }
 
-        private void toFile(File fileName) {
+        public void toFile(File fileName) {
             writeObject(fileName, this);
 
         }
-        private void addEntry(String fileName, String blobName) {
+        public void addEntry(String fileName, String blobName) {
             this.entries.put(fileName, blobName);
         }
-        private void removeEntry(String fileName) {
+        public void removeEntry(String fileName) {
             this.entries.remove(fileName);
         }
-        private String get(String fileName) {
+        public String get(String fileName) {
             // returns the version (sha1) of file staged
             return this.entries.get(fileName);
         }
 
-        private HashMap<String, String> getEntries(){
+        public HashMap<String, String> getEntries(){
             return this.entries;
         }
-        private int size() {
+        public int size() {
             return this.entries.size();
         }
-        private boolean isEmpty() {
+        public boolean isEmpty() {
             return this.entries.isEmpty();
         }
 
     }
 
     /* TODO: fill in the rest of this class. */
-    public static void init() throws IOException {
+    public static void init(){
         // Check if .gitlet exist, if not, mkdir()
         if (GITLET_DIR.exists()) {
             System.out.println("A Gitlet version-control system already exists in the current directory.");
@@ -105,7 +105,6 @@ public class Repository {
             HEAD.createNewFile();
             Utils.writeContents(master, "");
             updateHEADBranch("master");
-
         } catch (IOException e) {
             // Handle potential IOException (e.g., permission issues)
             e.printStackTrace();
@@ -115,14 +114,11 @@ public class Repository {
         Index AddIndex = new Index();
         Index RemoveIndex = new Index();
         Index Tracked = new Index();
+        Index RemoteIndex = new Index();
         AddIndex.toFile(ADD_INDEX);
         RemoveIndex.toFile(REMOVE_INDEX);
         Tracked.toFile(TRACKED);
-
-        // add remote
-        REMOTE.createNewFile();
-        HashMap<String, String> remoteMap = new HashMap<>();
-        writeObject(REMOTE, remoteMap);
+        RemoteIndex.toFile(REMOTE_INDEX);
 
         // initial commit
         Repository.commit("initial commit");

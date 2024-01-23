@@ -2,44 +2,40 @@ package gitlet;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 
-import static gitlet.Repository.*;
 import static gitlet.Utils.*;
 
-public class Remote{
+public class Remote extends Repository{
     public static final File CWD = new File(System.getProperty("user.dir"));
     public static final File GITLET_DIR = join(CWD, ".gitlet");
     public static final File REMOTE = Utils.join(GITLET_DIR, "REMOTE");
     public static void addRemote(String remoteName, String remoteDir) {
-        HashMap<String, String> remoteMap = readObject(REMOTE, HashMap.class);
-        if (!remoteMap.containsKey(remoteName)) {
-            remoteMap.put(remoteName, remoteDir.replaceAll("/", File.separator));
+        Index remoteIndex = Repository.Index.fromFile(REMOTE_INDEX);
+        if (!remoteIndex.getEntries().containsKey(remoteName)) {
+            remoteIndex.addEntry(remoteName, remoteDir.replaceAll("/", File.separator));
         } else {
             System.out.println("A remote with that name already exists.");
             return;
         }
-        writeObject(REMOTE, remoteMap);
+        remoteIndex.toFile(REMOTE_INDEX);
     }
 
     public static void removeRemote(String remoteName) {
-        HashMap<String, String> remoteMap = readObject(REMOTE, HashMap.class);
-        if (remoteMap.containsKey(remoteName)) {
-            remoteMap.remove(remoteName);
+        Index remoteIndex = Repository.Index.fromFile(REMOTE_INDEX);
+        if (remoteIndex.getEntries().containsKey(remoteName)) {
+            remoteIndex.removeEntry(remoteName);
         } else {
             System.out.println("A remote with that name does not exist.");
             return;
         }
-        writeObject(REMOTE, remoteMap);
+        remoteIndex.toFile(REMOTE_INDEX);
     }
 
     private static String getRemoteDir(String remoteName) {
-        HashMap<String, String> remoteMap = readObject(REMOTE, HashMap.class);
-        if (remoteMap.containsKey(remoteName)) {
-            return remoteMap.get(remoteName);
+        Index remoteIndex = Repository.Index.fromFile(REMOTE_INDEX);
+        if (remoteIndex.getEntries().containsKey(remoteName)) {
+            return remoteIndex.get(remoteName);
         } else {
             System.out.println("A remote with that name does not exist.");
             return null;
@@ -80,7 +76,7 @@ public class Remote{
 
     }
 
-    public static void fetch(String remoteName, String remoteBranchName) throws IOException {
+    public static void fetch(String remoteName, String remoteBranchName) {
         // check if remote .gitlet exist
         String remoteDirString = getRemoteDir(remoteName);
         if (remoteDirString == null) {
@@ -95,15 +91,19 @@ public class Remote{
 
         // check branch folder
         if (!Utils.join(BRANCHES_DIR, remoteName).exists()) {
-            Utils.join(BRANCHES_DIR, remoteName).mkdir();
+           Utils.join(BRANCHES_DIR, remoteName).mkdir();
         }
         if (!Utils.join(BRANCHES_DIR, remoteName, remoteBranchName).exists()) {
-            Utils.join(BRANCHES_DIR, remoteName, remoteBranchName).createNewFile();
+            try {
+                Utils.join(BRANCHES_DIR, remoteName, remoteBranchName).createNewFile();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         // move all blobs and commits
         File remoteBlobDir = Utils.join(remoteDirString,"blobs");
-        for (File blob: remoteBlobDir.listFiles()) {
+        for (File blob: Objects.requireNonNull(remoteBlobDir.listFiles())) {
             File newLocation = Utils.join(BLOBS_DIR,blob.getName());
             boolean status = blob.renameTo(newLocation);
                 /*if (!status) {
@@ -111,7 +111,7 @@ public class Remote{
                 }*/
         }
         File remoteCommitDir = Utils.join(remoteDirString, "commits");
-        for (File commit: remoteCommitDir.listFiles()) {
+        for (File commit: Objects.requireNonNull(remoteCommitDir.listFiles())) {
             File newLocation = Utils.join(COMMITS_DIR,commit.getName());
             boolean status = commit.renameTo(newLocation);
                 /*if (!status) {
@@ -124,7 +124,7 @@ public class Remote{
     public static boolean remoteBranchExist(String remoteName, String branchName) {
         // check if branch exist
         boolean match = false;
-        for(File f:Utils.join(getRemoteDir(remoteName), "branches").listFiles()) {
+        for(File f: Objects.requireNonNull(join(getRemoteDir(remoteName), "branches").listFiles())) {
             if (branchName.equals(f.getName())) {
                 match = true;
             }
@@ -149,7 +149,7 @@ public class Remote{
                     fringe.offer(((MergedCommit) c).getFirstParentID());
                     fringe.offer(((MergedCommit) c).getSecondParentID());
                 } else {
-                    if (!c.getParentID().equals("")) {
+                    if (!c.getParentID().isEmpty()) {
                         fringe.offer(c.getParentID());
                     }
                 }
