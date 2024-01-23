@@ -79,9 +79,7 @@ public class Remote extends Repository{
     }
     public static void copyFile(File source, File target) {
         Path sourceDir = Paths.get(source.getPath());
-        System.out.println(sourceDir);
         Path targetDir = sourceDir.resolve(target.getPath());
-        System.out.println(targetDir);
         try {
             Files.copy(sourceDir, targetDir, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
