@@ -2,6 +2,10 @@ package gitlet;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 import static gitlet.Utils.*;
@@ -56,18 +60,12 @@ public class Remote extends Repository{
             File remoteBlobDir = Utils.join(remoteDirString, "blobs");
             for (File blob: BLOBS_DIR.listFiles()) {
                 File newLocation = Utils.join(remoteBlobDir,blob.getName());
-                boolean status = blob.renameTo(newLocation);
-                /*if (!status) {
-                    System.out.println("Commiting staged files unsuccessfully");
-                }*/
+                copyFile(blob, newLocation);
             }
             File remoteCommitDir = Utils.join(remoteDirString, "commits");
             for (File commit: COMMITS_DIR.listFiles()) {
                 File newLocation = Utils.join(remoteCommitDir,commit.getName());
-                boolean status = commit.renameTo(newLocation);
-                /*if (!status) {
-                    System.out.println("Commiting staged files unsuccessfully");
-                }*/
+                copyFile(commit, newLocation);
             }
             setRemoteBranchHead(remoteName, branchName, getHEADCommitID());
         } else {
@@ -75,7 +73,15 @@ public class Remote extends Repository{
         }
 
     }
-
+    public static void copyFile(File source, File target) {
+        Path sourceDir = Paths.get(source.getPath());
+        Path targetDir = sourceDir.resolve(target.getPath());
+        try {
+            Files.copy(sourceDir, targetDir, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
     public static void fetch(String remoteName, String remoteBranchName) {
         // check if remote .gitlet exist
         String remoteDirString = getRemoteDir(remoteName);
@@ -105,18 +111,13 @@ public class Remote extends Repository{
         File remoteBlobDir = Utils.join(remoteDirString,"blobs");
         for (File blob: Objects.requireNonNull(remoteBlobDir.listFiles())) {
             File newLocation = Utils.join(BLOBS_DIR,blob.getName());
-            boolean status = blob.renameTo(newLocation);
-                /*if (!status) {
-                    System.out.println("Commiting staged files unsuccessfully");
-                }*/
+            copyFile(blob, newLocation);
         }
         File remoteCommitDir = Utils.join(remoteDirString, "commits");
         for (File commit: Objects.requireNonNull(remoteCommitDir.listFiles())) {
             File newLocation = Utils.join(COMMITS_DIR,commit.getName());
-            boolean status = commit.renameTo(newLocation);
-                /*if (!status) {
-                    System.out.println("Commiting staged files unsuccessfully");
-                }*/
+            copyFile(commit, newLocation);
+
         }
         writeContents(Utils.join(BRANCHES_DIR, remoteName, remoteBranchName), getRemoteBranchHead(remoteName, remoteBranchName));
     }

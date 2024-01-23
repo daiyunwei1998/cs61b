@@ -207,6 +207,10 @@ public class Repository {
         // returns the commit id of that branch's current 'head'
         return readContentsAsString(Utils.join(BRANCHES_DIR, branchName));
     }
+    public static String getBranchHeadRemote(String remoteName, String branchName) {
+        // returns the commit id of that branch's current 'head'
+        return readContentsAsString(Utils.join(BRANCHES_DIR,remoteName, branchName));
+    }
     public static String getHEADCommitID() {
         String headBranch = Utils.readContentsAsString(HEAD);
         File branchFile = Utils.join(BRANCHES_DIR, headBranch);
@@ -723,26 +727,34 @@ public class Repository {
             return;
         }
 
-      if (!branchExist(branchName)) {
+        if (!branchExist(branchName)) {
           System.out.println("No such branch exists.");
           return;
-      }
+        }
 
-
-      Set<String> CWDFileSet = new HashSet<>();
-      FileFilter filter = file -> file.isFile();
-      for (File f:CWD.listFiles(filter)) {
+        Set<String> CWDFileSet = new HashSet<>();
+        FileFilter filter = file -> file.isFile();
+        for (File f:CWD.listFiles(filter)) {
           CWDFileSet.add(f.getName());
-      }
+        }
+        String commitID;
+        if (branchName.contains("/")) {
+            String[] parts = branchName.split("/");
+            String remoteName = parts[0];
+            String branch = parts[1];
+            commitID = getBranchHeadRemote(remoteName, branch);
+        } else {
+            commitID = getBranchHead(branchName);
+        }
 
-      Set<String> headFileSet = getHEADCommit().getTree().keySet();
-      Commit targetCommit = Commit.fromFile(Utils.join(COMMITS_DIR,getBranchHead(branchName)));
-      Set<String> commitFileSet = targetCommit.getTree().keySet();
-      Set<String> filesToDelete = difference(CWDFileSet, commitFileSet);
+        Set<String> headFileSet = getHEADCommit().getTree().keySet();
+        Commit targetCommit = Commit.fromFile(Utils.join(COMMITS_DIR, commitID));
+        Set<String> commitFileSet = targetCommit.getTree().keySet();
+        Set<String> filesToDelete = difference(CWDFileSet, commitFileSet);
 
-      // warn users about untracked files being overwritten
-      Set<String> untracked = difference(CWDFileSet, headFileSet);
-      if (!intersection(commitFileSet,untracked).isEmpty()) {
+        // warn users about untracked files being overwritten
+        Set<String> untracked = difference(CWDFileSet, headFileSet);
+        if (!intersection(commitFileSet,untracked).isEmpty()) {
           System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
           return;
       }
@@ -805,11 +817,25 @@ public class Repository {
     public static boolean branchExist(String branchName) {
         // check if branch exist
         boolean match = false;
-        for(File f:BRANCHES_DIR.listFiles()) {
-            if (branchName.equals(f.getName())) {
-                match = true;
+
+        // if remote branch
+        if (branchName.contains("/")) {
+            String[] parts = branchName.split("/");
+            String remoteName = parts[0];
+            String branch = parts[1];
+            for(File f:Utils.join(BRANCHES_DIR, remoteName).listFiles()) {
+                if (branch.equals(f.getName())) {
+                    match = true;
+                }
+            }
+        } else {
+            for(File f:BRANCHES_DIR.listFiles()) {
+                if (branchName.equals(f.getName())) {
+                    match = true;
+                }
             }
         }
+
         return match;
     }
     public static void removeBranch(String branchName) {
@@ -1136,12 +1162,6 @@ public class Repository {
 
 
     public static void main(String[] args) {
-        File file = new File("a/b");
-        System.out.println(file.getPath());
-        try {
-            file.createNewFile();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
     }
 }
