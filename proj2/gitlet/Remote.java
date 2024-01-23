@@ -57,6 +57,11 @@ public class Remote extends Repository{
             return;
         }
 
+        // check if remote branch exist
+        if (!remoteBranchExist(remoteName, branchName)) {
+            branchRemote(remoteName, branchName);
+        }
+
         // check if remote head of branch in local current branch history
         String remoteHeadID = getRemoteBranchHead(remoteName, branchName);
         if (isInHistory(remoteHeadID)) {
@@ -164,9 +169,47 @@ public class Remote extends Repository{
         }
         return false;
     }
+
+    public static void branchRemote(String remoteName, String branchName) {
+        // check if remote .gitlet exist
+        String remoteDirString = getRemoteDir(remoteName);
+        if (remoteDirString == null) {
+            System.out.println("Remote directory not found.");
+            return;
+        }
+        File remoteDir = new File(remoteDirString);
+        if (!remoteDir.exists()) {
+            System.out.println("Remote directory not found.");
+            return;
+        }
+
+        if (remoteBranchExist(remoteName, branchName)) {
+            System.out.println("A branch with that name already exists in remote.");
+            return;
+        }
+
+        File branchFile = Utils.join(remoteDirString, "branches", branchName);
+        String headCommit = getRemoteHead(remoteName);
+        try {
+            branchFile.createNewFile();
+            writeContents(branchFile, headCommit);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
     public static String getRemoteBranchHead(String remoteName, String branchName) {
         // returns the commit id of that branch's current 'head'
         return readContentsAsString(Utils.join(getRemoteDir(remoteName), "branches", branchName));
+    }
+
+    public static String getRemoteHead(String remoteName) {
+        // returns the commit id of remote's current 'head'
+        String headBranch = Utils.readContentsAsString(Utils.join(getRemoteDir(remoteName), "HEAD"));
+        File branchFile = Utils.join(Utils.join(getRemoteDir(remoteName), "branches"), headBranch);
+        String commitID = Utils.readContentsAsString(branchFile);
+        return commitID;
     }
 
     public static void setRemoteBranchHead(String remoteName, String branchName, String commitID) {
