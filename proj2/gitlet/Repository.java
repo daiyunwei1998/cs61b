@@ -950,7 +950,7 @@ public class Repository {
     public static void merge(String otherBranch) {
         if (!checkMerge(otherBranch)) {
             return;
-        };
+        }
         String lca = latestCommonAncestor(getHEADBranch(), otherBranch);
         Commit splitPoint = Commit.fromFile(Utils.join(COMMITS_DIR, lca));
         Commit firstParent = getHEADCommit();
@@ -997,9 +997,7 @@ public class Repository {
                     continue;
                 }
             }
-            // if either modified
-            if (versionChanged(fileName, firstParent, splitPoint)) {
-            } else if (versionChanged(fileName, secondParent, splitPoint)) {
+            if (versionChanged(fileName, secondParent, splitPoint)) {
                 checkout(secondParent.getSHA1(), fileName);
                 add(fileName);
             }
@@ -1011,9 +1009,8 @@ public class Repository {
         Set<String> newlyAddedInBoth = intersection(
                 newlyAddedInCurrent, newlyAddedInOther);
         for (String fileName:newlyAddedInBoth) {
-            if (firstParent.getFileVersion(fileName).equals(
+            if (!firstParent.getFileVersion(fileName).equals(
                     secondParent.getFileVersion(fileName))) {
-            } else {
                 mergeConflict(fileName, firstParent, secondParent);
                 conflicted = true;
             }
