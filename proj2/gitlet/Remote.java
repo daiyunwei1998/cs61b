@@ -124,14 +124,9 @@ public class Remote extends Repository{
 
     public static boolean remoteBranchExist(String remoteName, String branchName) {
         // check if branch exist
-        boolean match = false;
-        for(File f: Objects.requireNonNull(join(getRemoteDir(remoteName), "branches").listFiles())) {
-            if (branchName.equals(f.getName())) {
-                match = true;
-            }
-        }
-        return match;
+        return Utils.join(getRemoteDir(remoteName), "branches", branchName).exists();
     }
+
     private static boolean isInHistory(String commitID) {
         // BFS: Initialize the fringe
         Queue<String> fringe = new LinkedList<String>();
@@ -141,10 +136,11 @@ public class Remote extends Repository{
         fringe.offer(getHEADCommitID());
         while (!fringe.isEmpty()) {
             String localCommitID = fringe.peek();
-            Commit c = Commit.fromFile(Utils.join(COMMITS_DIR, commitID));
+            Commit c = Commit.fromFile(Utils.join(COMMITS_DIR, localCommitID));
             if (!table.contains(c.getSHA1())) {
                 // if not transversed
                 if (commitID.equals(localCommitID)) {return true;}
+                System.out.println(commitID+"vs"+localCommitID);
                 table.add(c.getSHA1());
                 if (c instanceof MergedCommit) {
                     fringe.offer(((MergedCommit) c).getFirstParentID());
