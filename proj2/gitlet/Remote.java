@@ -213,7 +213,8 @@ public class Remote extends Repository {
 
     public static String getRemoteHead(String remoteName) {
         // returns the commit id of remote's current 'head'
-        String headBranch = Utils.readContentsAsString(Utils.join(getRemoteDir(remoteName), "HEAD"));
+        String headBranch = Utils.readContentsAsString(
+                Utils.join(getRemoteDir(remoteName), "HEAD"));
         File branchFile = Utils.join(Utils.join(getRemoteDir(remoteName), "branches"), headBranch);
         String commitID = Utils.readContentsAsString(branchFile);
         return commitID;

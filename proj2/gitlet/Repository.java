@@ -75,7 +75,8 @@ public class Repository {
     public static void init() {
         // Check if .gitlet exist, if not, mkdir()
         if (GITLET_DIR.exists()) {
-            System.out.println("A Gitlet version-control system already exists in the current directory.");
+            System.out.println("A Gitlet version-control system already "
+                    + "exists in the current directory.");
             return;
         }
         GITLET_DIR.mkdir();
@@ -323,7 +324,8 @@ public class Repository {
                                    Commit secondParent, String secondParentBranch) {
 
         // make a new commit object
-        Commit newCommit = new MergedCommit(firstParent, firstParentBranch, secondParent, secondParentBranch);
+        Commit newCommit = new MergedCommit(firstParent,
+                firstParentBranch, secondParent, secondParentBranch);
 
         // update staging area
         // read indexes
@@ -393,8 +395,8 @@ public class Repository {
 
             addIndex.removeEntry(fileName);
             addIndex.toFile(ADD_INDEX);
-            if (!addIndex.getEntries().containsValue(b.getFileName()) &&
-                    fStaged.exists()) {
+            if (!addIndex.getEntries().containsValue(b.getFileName())
+                    && fStaged.exists()) {
                 fStaged.delete();
                 // remove blob from staging area
             }
@@ -441,14 +443,7 @@ public class Repository {
             }
 
             File commitFile = Utils.join(Repository.COMMITS_DIR, c.getParentID());
-
-            try {
-                c = Commit.fromFile(commitFile);
-            } catch (Exception e) {
-                // Handle exceptions during commit reading
-                e.printStackTrace();
-                break;
-            }
+            c = Commit.fromFile(commitFile);
         }
 
         // Print information for the initial commit
@@ -549,7 +544,8 @@ public class Repository {
         // tracked in the current commit
         for (String fileName: commitFiles.keySet()) {
             // if not staged for rm, tracked in commit and deleted from CWD
-            if (!removeIndex.getEntries().containsKey(fileName) && !Utils.join(CWD, fileName).exists()) {
+            if (!removeIndex.getEntries().containsKey(fileName)
+                    && !Utils.join(CWD, fileName).exists()) {
                 result.put(fileName, "(deleted)");
             }
 
@@ -602,7 +598,8 @@ public class Repository {
         /*list the removed files*/
         System.out.println("=== Removed Files ===");
         Index removeIndex = Index.fromFile(REMOVE_INDEX);
-        TreeSet<String> sortedFileNamesRemove = new TreeSet<>(removeIndex.getEntries().keySet());
+        TreeSet<String> sortedFileNamesRemove = new TreeSet<>(
+                removeIndex.getEntries().keySet());
         for (String fileName : sortedFileNamesRemove) {
             System.out.println(fileName);
         }
@@ -614,7 +611,8 @@ public class Repository {
         }
         System.out.println();
         System.out.println("=== Untracked Files ===");
-        for (String untrackedFile:difference(getUntracked(), addIndex.getEntries().keySet())) {
+        for (String untrackedFile:difference(getUntracked(),
+                addIndex.getEntries().keySet())) {
             if (!modifiedFiles.containsKey(untrackedFile)) {
                 System.out.println(untrackedFile);
             }
@@ -745,7 +743,8 @@ public class Repository {
         // warn users about untracked files being overwritten
         Set<String> untracked = difference(cwdFileSet, headFileSet);
         if (!intersection(commitFileSet, untracked).isEmpty()) {
-            System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+            System.out.println("There is an untracked file in the"
+                    + " way; delete it, or add and commit it first.");
             return;
         }
 
@@ -757,7 +756,8 @@ public class Repository {
 
         // overwrite files
         for (String fileName:commitFileSet) {
-            Blob blobFile = Blob.readBlob(Utils.join(BLOBS_DIR, targetCommit.getTree().get(fileName)));
+            Blob blobFile = Blob.readBlob(Utils.join(BLOBS_DIR,
+                    targetCommit.getTree().get(fileName)));
             File saveToFile = Utils.join(CWD, fileName);
             blobFile.toOriginalFile(saveToFile);
         }
@@ -877,12 +877,14 @@ public class Repository {
             CWDFileSet.add(f.getName());
         }
         Set<String> headFileSet = getHEADCommit().getTree().keySet();
-        Set<String> commitFileSet = Commit.fromFile(Utils.join(COMMITS_DIR, commitID)).getTree().keySet();
+        Set<String> commitFileSet = Commit.fromFile(
+                Utils.join(COMMITS_DIR, commitID)).getTree().keySet();
 
         // warn users about untracked files being overwritten
         Set<String> untracked = difference(CWDFileSet, headFileSet);
         if (!intersection(commitFileSet, untracked).isEmpty()) {
-            System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+            System.out.println("There is an untracked file "
+                    +  "in the way; delete it, or add and commit it first.");
             return;
         }
 
@@ -922,7 +924,8 @@ public class Repository {
         }
         String LCA = latestCommonAncestor(getHEADBranch(), otherBranch);
         if (getBranchHead(otherBranch).equals(LCA)) {
-            System.out.println("Given branch is an ancestor of the current branch.");
+            System.out.println(
+                    "Given branch is an ancestor of the current branch.");
             return;
         }
 
@@ -935,13 +938,15 @@ public class Repository {
 
         Commit firstParent = getHEADCommit();
         String firstParentBranch = getHEADBranch();
-        Commit secondParent = Commit.fromFile(Utils.join(COMMITS_DIR, getBranchHead(otherBranch)));
+        Commit secondParent = Commit.fromFile(
+                Utils.join(COMMITS_DIR, getBranchHead(otherBranch)));
         Commit splitPoint = Commit.fromFile(Utils.join(COMMITS_DIR, LCA));
         boolean conflicted = false;
 
         Set<String> untracked = difference(cwdFileSet, firstParent.getTree().keySet());
         if (!untracked.isEmpty()) {
-            System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+            System.out.println("There is an untracked file in the way;"
+                    + " delete it, or add and commit it first.");
             return;
         }
 
@@ -956,7 +961,8 @@ public class Repository {
         for (String fileName: splitPoint.getTree().keySet()) {
             // Condition: deleted
             // if deleted in both branch
-            if (!firstParent.containsFile(fileName) && !secondParent.containsFile(fileName)) {
+            if (!firstParent.containsFile(fileName)
+                    && !secondParent.containsFile(fileName)) {
                 continue;
             }
                 // deleted in either
@@ -989,7 +995,8 @@ public class Repository {
             if (versionChanged(fileName, firstParent, splitPoint)
                 && versionChanged(fileName, secondParent, splitPoint)) {
                 // in the same way
-                if (Objects.equals(firstParent.getFileVersion(fileName), secondParent.getFileVersion(fileName))) {
+                if (Objects.equals(firstParent.getFileVersion(fileName),
+                        secondParent.getFileVersion(fileName))) {
                     continue;
                 } else {
                     // not in the same way
@@ -1011,13 +1018,17 @@ public class Repository {
             }
         } // end of for loop
 
-        Set<String> newlyAddedInCurrent = difference(firstParent.getTree().keySet(), splitPoint.getTree().keySet());
-        Set<String> newlyAddedInOther = difference(secondParent.getTree().keySet(), splitPoint.getTree().keySet());
+        Set<String> newlyAddedInCurrent = difference(
+                firstParent.getTree().keySet(), splitPoint.getTree().keySet());
+        Set<String> newlyAddedInOther = difference(
+                secondParent.getTree().keySet(), splitPoint.getTree().keySet());
         // newly added in both branch
-        Set<String> newlyAddedInBoth = intersection(newlyAddedInCurrent, newlyAddedInOther);
+        Set<String> newlyAddedInBoth = intersection(
+                newlyAddedInCurrent, newlyAddedInOther);
         for (String fileName:newlyAddedInBoth) {
             // if same content
-            if (firstParent.getFileVersion(fileName).equals(secondParent.getFileVersion(fileName))) {
+            if (firstParent.getFileVersion(fileName).equals(
+                    secondParent.getFileVersion(fileName))) {
                 continue;
             } else {
                 // if not same content
@@ -1043,16 +1054,19 @@ public class Repository {
 
     }
 
-    public static void mergeConflict(String fileName, Commit firstParent, Commit secondParent) {
+    public static void mergeConflict(
+            String fileName, Commit firstParent, Commit secondParent) {
         StringBuilder output = new StringBuilder("<<<<<<< HEAD\n");
         if (firstParent.getFileVersion(fileName) != null) {
-            File currentVersionFile = Utils.join(BLOBS_DIR, firstParent.getFileVersion(fileName));
+            File currentVersionFile = Utils.join(BLOBS_DIR,
+                    firstParent.getFileVersion(fileName));
             output.append(Blob.readBlob(currentVersionFile).getContent());
         }
         output.append("=======\n");
 
         if (secondParent.getFileVersion(fileName) != null) {
-            File givenBranchVersionFile = Utils.join(BLOBS_DIR, secondParent.getFileVersion(fileName));
+            File givenBranchVersionFile = Utils.join(BLOBS_DIR,
+                    secondParent.getFileVersion(fileName));
             output.append(Blob.readBlob(givenBranchVersionFile).getContent());
         }
         output.append(">>>>>>>\n");
@@ -1070,7 +1084,8 @@ public class Repository {
 
     }
 
-    public static boolean versionChanged(String fileName, Commit commit1, Commit commit2) {
+    public static boolean versionChanged(
+            String fileName, Commit commit1, Commit commit2) {
         /*returns true if the file version is different in the commits specified
         * note that if absent in either commits will return true */
 

@@ -1,6 +1,6 @@
 package gitlet;
 
-public class MergedCommit extends Commit{
+public class MergedCommit extends Commit {
     private String firstParentID;
     private String firstParentBranch;
     private String secondParentID;
