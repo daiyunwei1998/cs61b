@@ -41,7 +41,6 @@ public class Remote extends Repository{
         if (remoteIndex.getEntries().containsKey(remoteName)) {
             return remoteIndex.get(remoteName);
         } else {
-            System.out.println("A remote with that name does not exist.");
             return null;
         }
 
@@ -75,7 +74,9 @@ public class Remote extends Repository{
     }
     public static void copyFile(File source, File target) {
         Path sourceDir = Paths.get(source.getPath());
+        System.out.println(sourceDir);
         Path targetDir = sourceDir.resolve(target.getPath());
+        System.out.println(targetDir);
         try {
             Files.copy(sourceDir, targetDir, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
@@ -140,7 +141,6 @@ public class Remote extends Repository{
             if (!table.contains(c.getSHA1())) {
                 // if not transversed
                 if (commitID.equals(localCommitID)) {return true;}
-                System.out.println(commitID+"vs"+localCommitID);
                 table.add(c.getSHA1());
                 if (c instanceof MergedCommit) {
                     fringe.offer(((MergedCommit) c).getFirstParentID());
