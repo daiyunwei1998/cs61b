@@ -1,29 +1,21 @@
 package gitlet;
-
-import java.io.File;
-import java.io.IOException;
 import java.util.Objects;
 
 
 /** Driver class for Gitlet, a subset of the Git version-control system.
- *  @author TODO
  */
 public class Main {
 
     /** Usage: java gitlet.Main ARGS, where ARGS contains
      *  <COMMAND> <OPERAND1> <OPERAND2> ... 
      */
-    public static void main(String[] args){
+    public static void main(String[] args) {
         if (args.length == 0) {
             System.out.println("Please enter a command.");
             return;
         }
-        // TODO: what if args is empty?
-        // TODO : all methods should check if input args if valid (in terms of number)
-        // TODO : check if in git repo
-        // TODO maybe check if not in a git repo before below?
         String firstArg = args[0];
-        switch(firstArg) {
+        switch (firstArg) {
             case "init":
                 Repository.init();
                 break;
@@ -118,35 +110,35 @@ public class Main {
                 }
                 break;
             case "add-remote":
-                if (args.length != 3){
+                if (args.length != 3) {
                     System.out.println("Incorrect operands.");
                 } else {
                     Remote.addRemote(args[1], args[2]);
                 }
                 break;
             case "rm-remote":
-                if (args.length != 2){
+                if (args.length != 2) {
                     System.out.println("Incorrect operands.");
                 } else {
                     Remote.removeRemote(args[1]);
                 }
                 break;
             case "push":
-                if (args.length != 3){
+                if (args.length != 3) {
                     System.out.println("Incorrect operands.");
                 } else {
                     Remote.push(args[1], args[2]);
                 }
                 break;
             case "fetch":
-                if (args.length != 3){
+                if (args.length != 3) {
                     System.out.println("Incorrect operands.");
                 } else {
                     Remote.fetch(args[1], args[2]);
                 }
                 break;
             case "pull":
-                if (args.length != 3){
+                if (args.length != 3) {
                     System.out.println("Incorrect operands.");
                 } else {
                     Remote.pull(args[1], args[2]);

@@ -1,7 +1,6 @@
 package gitlet;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,7 +10,7 @@ import java.util.*;
 
 import static gitlet.Utils.*;
 
-public class Remote extends Repository{
+public class Remote extends Repository {
     public static final File CWD = new File(System.getProperty("user.dir"));
     public static final File GITLET_DIR = join(CWD, ".gitlet");
     public static final File REMOTE = Utils.join(GITLET_DIR, "REMOTE");
@@ -69,12 +68,12 @@ public class Remote extends Repository{
             // append commits (brute force)
             File remoteBlobDir = Utils.join(remoteDirString, "blobs");
             for (File blob: Objects.requireNonNull(BLOBS_DIR.listFiles())) {
-                File newLocation = Utils.join(remoteBlobDir,blob.getName());
+                File newLocation = Utils.join(remoteBlobDir, blob.getName());
                 copyFile(blob, newLocation);
             }
             File remoteCommitDir = Utils.join(remoteDirString, "commits");
             for (File commit: Objects.requireNonNull(COMMITS_DIR.listFiles())) {
-                File newLocation = Utils.join(remoteCommitDir,commit.getName());
+                File newLocation = Utils.join(remoteCommitDir, commit.getName());
                 copyFile(commit, newLocation);
             }
             setRemoteBranchHead(remoteName, branchName, getHEADCommitID());
@@ -113,7 +112,7 @@ public class Remote extends Repository{
 
         // check branch folder
         if (!Utils.join(BRANCHES_DIR, remoteName).exists()) {
-           Utils.join(BRANCHES_DIR, remoteName).mkdir();
+            Utils.join(BRANCHES_DIR, remoteName).mkdir();
         }
         if (!Utils.join(BRANCHES_DIR, remoteName, remoteBranchName).exists()) {
             try {
@@ -124,18 +123,19 @@ public class Remote extends Repository{
         }
 
         // move all blobs and commits
-        File remoteBlobDir = Utils.join(remoteDirString,"blobs");
+        File remoteBlobDir = Utils.join(remoteDirString, "blobs");
         for (File blob: Objects.requireNonNull(remoteBlobDir.listFiles())) {
-            File newLocation = Utils.join(BLOBS_DIR,blob.getName());
+            File newLocation = Utils.join(BLOBS_DIR, blob.getName());
             copyFile(blob, newLocation);
         }
         File remoteCommitDir = Utils.join(remoteDirString, "commits");
         for (File commit: Objects.requireNonNull(remoteCommitDir.listFiles())) {
-            File newLocation = Utils.join(COMMITS_DIR,commit.getName());
+            File newLocation = Utils.join(COMMITS_DIR, commit.getName());
             copyFile(commit, newLocation);
 
         }
-        writeContents(Utils.join(BRANCHES_DIR, remoteName, remoteBranchName), getRemoteBranchHead(remoteName, remoteBranchName));
+        writeContents(Utils.join(BRANCHES_DIR, remoteName, remoteBranchName),
+                getRemoteBranchHead(remoteName, remoteBranchName));
     }
 
     public static boolean remoteBranchExist(String remoteName, String branchName) {
@@ -155,7 +155,9 @@ public class Remote extends Repository{
             Commit c = Commit.fromFile(Utils.join(COMMITS_DIR, localCommitID));
             if (!table.contains(c.getSHA1())) {
                 // if not transversed
-                if (commitID.equals(localCommitID)) {return true;}
+                if (commitID.equals(localCommitID)) {
+                    return true;
+                }
                 table.add(c.getSHA1());
                 if (c instanceof MergedCommit) {
                     fringe.offer(((MergedCommit) c).getFirstParentID());
@@ -200,7 +202,7 @@ public class Remote extends Repository{
     }
     public static void pull(String remoteName, String branchName) {
         fetch(remoteName, branchName);
-        merge(remoteName +"/" + branchName);
+        merge(remoteName + "/" + branchName);
     }
 
 
@@ -218,6 +220,6 @@ public class Remote extends Repository{
     }
 
     public static void setRemoteBranchHead(String remoteName, String branchName, String commitID) {
-        writeContents(Utils.join(getRemoteDir(remoteName), "branches",branchName), commitID);
+        writeContents(Utils.join(getRemoteDir(remoteName), "branches", branchName), commitID);
     }
 }
