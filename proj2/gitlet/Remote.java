@@ -51,6 +51,11 @@ public class Remote extends Repository{
             System.out.println("Remote directory not found.");
             return;
         }
+        File remoteDir = new File(remoteDirString);
+        if (!remoteDir.exists()) {
+            System.out.println("Remote directory not found.");
+            return;
+        }
 
         // check if remote head of branch in local current branch history
         String remoteHeadID = getRemoteBranchHead(remoteName, branchName);
@@ -162,9 +167,8 @@ public class Remote extends Repository{
         return false;
     }
     public static String getRemoteBranchHead(String remoteName, String branchName) {
-        File remoteBranchDir = Utils.join(getRemoteDir(remoteName), "branches",remoteName);
         // returns the commit id of that branch's current 'head'
-        return readContentsAsString(Utils.join(remoteBranchDir, branchName));
+        return readContentsAsString(Utils.join(getRemoteDir(remoteName), "branches", branchName));
     }
 
     public static void setRemoteBranchHead(String remoteName, String branchName, String commitID) {
