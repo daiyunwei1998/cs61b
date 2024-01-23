@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -15,7 +16,7 @@ public class Remote{
     public static final File REMOTE = Utils.join(GITLET_DIR, "REMOTE");
     public static void addRemote(String remoteName, String remoteDir) {
         HashMap<String, String> remoteMap = readObject(REMOTE, HashMap.class);
-        if (remoteMap.containsKey(remoteName)) {
+        if (!remoteMap.containsKey(remoteName)) {
             remoteMap.put(remoteName, remoteDir.replaceAll("/", File.separator));
         } else {
             System.out.println("A remote with that name already exists.");
@@ -79,6 +80,57 @@ public class Remote{
 
     }
 
+    public static void fetch(String remoteName, String remoteBranchName) throws IOException {
+        // check if remote .gitlet exist
+        String remoteDirString = getRemoteDir(remoteName);
+        if (remoteDirString == null) {
+            System.out.println("Remote directory not found.");
+            return;
+        }
+        // check if remote branch exist
+        if (!remoteBranchExist(remoteName, remoteBranchName)) {
+            System.out.println("That remote does not have that branch.");
+            return;
+        }
+
+        // check branch folder
+        if (!Utils.join(BRANCHES_DIR, remoteName).exists()) {
+            Utils.join(BRANCHES_DIR, remoteName).mkdir();
+        }
+        if (!Utils.join(BRANCHES_DIR, remoteName, remoteBranchName).exists()) {
+            Utils.join(BRANCHES_DIR, remoteName, remoteBranchName).createNewFile();
+        }
+
+        // move all blobs and commits
+        File remoteBlobDir = Utils.join(remoteDirString,"blobs");
+        for (File blob: remoteBlobDir.listFiles()) {
+            File newLocation = Utils.join(BLOBS_DIR,blob.getName());
+            boolean status = blob.renameTo(newLocation);
+                /*if (!status) {
+                    System.out.println("Commiting staged files unsuccessfully");
+                }*/
+        }
+        File remoteCommitDir = Utils.join(remoteDirString, "commits");
+        for (File commit: remoteCommitDir.listFiles()) {
+            File newLocation = Utils.join(COMMITS_DIR,commit.getName());
+            boolean status = commit.renameTo(newLocation);
+                /*if (!status) {
+                    System.out.println("Commiting staged files unsuccessfully");
+                }*/
+        }
+        writeContents(Utils.join(BRANCHES_DIR, remoteName, remoteBranchName), getRemoteBranchHead(remoteName, remoteBranchName));
+    }
+
+    public static boolean remoteBranchExist(String remoteName, String branchName) {
+        // check if branch exist
+        boolean match = false;
+        for(File f:Utils.join(getRemoteDir(remoteName), "branches").listFiles()) {
+            if (branchName.equals(f.getName())) {
+                match = true;
+            }
+        }
+        return match;
+    }
     private static boolean isInHistory(String commitID) {
         // BFS: Initialize the fringe
         Queue<String> fringe = new LinkedList<String>();

@@ -132,8 +132,18 @@ public class Main {
                 }
                 break;
             case "push":
+                if (args.length != 3){
+                    System.out.println("Incorrect operands.");
+                } else {
+                    Remote.push(args[1], args[2]);
+                }
                 break;
             case "fetch":
+                if (args.length != 3){
+                    System.out.println("Incorrect operands.");
+                } else {
+                    Remote.fetch(args[1], args[2]);
+                }
                 break;
             case "pull":
                 break;

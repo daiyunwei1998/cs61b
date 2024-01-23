@@ -787,7 +787,7 @@ public class Repository {
 
     public static void branch(String branchName) {
         if (!GITLET_DIR.exists()) {
-            System.out.println("Not in an in4itialized Gitlet directory.");
+            System.out.println("Not in an initialized Gitlet directory.");
             return;
         }
 
@@ -1140,8 +1140,12 @@ public class Repository {
 
 
     public static void main(String[] args) {
-        File f = Utils.join("C:\\Users\\daiyu\\Desktop\\test-gitlet\\.gitlet\\blobs\\939417e4103cb672c5d0ad56c27c7d3308b202c7");
-        Blob b = Blob.readBlob(f);
-        System.out.println(b.getFileName());
+        File file = new File("a/b");
+        System.out.println(file.getPath());
+        try {
+            file.createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
