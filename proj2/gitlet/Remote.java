@@ -200,7 +200,7 @@ public class Remote extends Repository{
     }
     public static void pull(String remoteName, String branchName) {
         fetch(remoteName, branchName);
-        merge(branchName);
+        merge(remoteName +"/" + branchName);
     }
 
 

@@ -1,7 +1,4 @@
 package gitlet;
-
-//todo delete import edu.princeton.cs.algs4.StdOut;
-
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -9,17 +6,11 @@ import java.util.*;
 import static gitlet.Utils.*;
 import static gitlet.Utils.writeContents;
 
-// TODO: any imports you need here
-
 /** Represents a gitlet repository.
- *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
- *
- *  @author TODO
  */
 public class Repository {
     /**
-     * TODO: add instance variables here.
      *
      * List all instance variables of the Repository class here with a useful
      * comment above them describing what that variable represents and how that
@@ -51,7 +42,7 @@ public class Repository {
         }
 
         public static Index fromFile(File fileName) {
-            return Utils.readObject(fileName,Index.class);
+            return Utils.readObject(fileName, Index.class);
         }
 
         public void toFile(File fileName) {
@@ -69,7 +60,7 @@ public class Repository {
             return this.entries.get(fileName);
         }
 
-        public HashMap<String, String> getEntries(){
+        public HashMap<String, String> getEntries() {
             return this.entries;
         }
         public int size() {
@@ -81,8 +72,7 @@ public class Repository {
 
     }
 
-    /* TODO: fill in the rest of this class. */
-    public static void init(){
+    public static void init() {
         // Check if .gitlet exist, if not, mkdir()
         if (GITLET_DIR.exists()) {
             System.out.println("A Gitlet version-control system already exists in the current directory.");
@@ -162,7 +152,6 @@ public class Repository {
 
 
         /** check current version */
-        // todo test this
         Commit headCommit = getHEADCommit();
         if (Objects.equals(headCommit.getFileVersion(fileName), b.getSHA1())) {
           /*   if file is the same as in current commit
@@ -215,7 +204,7 @@ public class Repository {
     }
     public static String getBranchHeadRemote(String remoteName, String branchName) {
         // returns the commit id of that branch's current 'head'
-        return readContentsAsString(Utils.join(BRANCHES_DIR,remoteName, branchName));
+        return readContentsAsString(Utils.join(BRANCHES_DIR, remoteName, branchName));
     }
     public static String getHEADCommitID() {
         String headBranch = Utils.readContentsAsString(HEAD);
@@ -232,7 +221,7 @@ public class Repository {
             return null;
         }
         File headCommit = Utils.join(Repository.COMMITS_DIR,commitID);
-        return readObject(headCommit,Commit.class);
+        return readObject(headCommit, Commit.class);
     }
     public static String getFullID(String commitID) {
         if (commitID.length() >= 40) {
@@ -674,7 +663,7 @@ public class Repository {
 
         // Check if commits id is real
         if (commitID.length() >= 40) {
-            commitFile = Utils.join(COMMITS_DIR,commitID);
+            commitFile = Utils.join(COMMITS_DIR, commitID);
             if (!commitFile.exists()) {
                 System.out.println("No commit with that id exists.");
                 return;
@@ -704,18 +693,18 @@ public class Repository {
         // read the blob
         Blob b = c.getBlob(fileName);
         // make new file
-        File f = Utils.join(CWD,fileName);
+        File f = Utils.join(CWD, fileName);
         // overwrite with snapshot version
-        writeContents(f,b.getContent());
+        writeContents(f, b.getContent());
     }
 
-    public static  <T> Set<T> intersection(Set<T> set1, Set<T> set2) {
+    public static <T> Set<T> intersection(Set<T> set1, Set<T> set2) {
         HashSet<T> result = new HashSet<>(set1);
         result.retainAll(set2);
         return result;
     }
 
-    public static  <T> Set<T> difference(Set<T> set1, Set<T> set2) {
+    public static <T> Set<T> difference(Set<T> set1, Set<T> set2) {
         HashSet<T> result = new HashSet<>(set1);
         result.removeAll(set2);
         return result;
@@ -761,17 +750,17 @@ public class Repository {
         // warn users about untracked files being overwritten
         Set<String> untracked = difference(CWDFileSet, headFileSet);
         if (!intersection(commitFileSet,untracked).isEmpty()) {
-          System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
-          return;
-      }
+            System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+            return;
+        }
 
-      // delete files
-      for (String fileName:filesToDelete) {
+        // delete files
+        for (String fileName:filesToDelete) {
             File fileToDelete = Utils.join(CWD, fileName);
             fileToDelete.delete();
-      }
+        }
 
-      // overwrite files
+        // overwrite files
         for (String fileName:commitFileSet) {
             Blob blobFile = Blob.readBlob(Utils.join(BLOBS_DIR, targetCommit.getTree().get(fileName)));
             File saveToFile = Utils.join(CWD, fileName);
@@ -829,13 +818,13 @@ public class Repository {
             String[] parts = branchName.split("/");
             String remoteName = parts[0];
             String branch = parts[1];
-            for(File f:Utils.join(BRANCHES_DIR, remoteName).listFiles()) {
+            for (File f:Utils.join(BRANCHES_DIR, remoteName).listFiles()) {
                 if (branch.equals(f.getName())) {
                     match = true;
                 }
             }
         } else {
-            for(File f:BRANCHES_DIR.listFiles()) {
+            for (File f:BRANCHES_DIR.listFiles()) {
                 if (branchName.equals(f.getName())) {
                     match = true;
                 }
@@ -924,7 +913,7 @@ public class Repository {
 
     public static void merge(String otherBranch) {
         // check if merge is necessary
-        if (UncommittedExist()) {
+        if (uncommittedExist()) {
             System.out.println("You have uncommitted changes.");
             return;
         }
@@ -1002,8 +991,8 @@ public class Repository {
             }
 
             // if both modified
-            if (versionChanged(fileName, firstParent, splitPoint) &&
-            versionChanged(fileName, secondParent, splitPoint)) {
+            if (versionChanged(fileName, firstParent, splitPoint)
+                && versionChanged(fileName, secondParent, splitPoint)) {
                 // in the same way
                 if (Objects.equals(firstParent.getFileVersion(fileName), secondParent.getFileVersion(fileName))) {
                     continue;
@@ -1077,16 +1066,12 @@ public class Repository {
         add(fileName);
     }
 
-    public static boolean UncommittedExist() {
+    public static boolean uncommittedExist() {
         // check if any uncommitted changes
         Index addIndex = Index.fromFile(ADD_INDEX);
         Index removeIndex = Index.fromFile(REMOVE_INDEX);
 
-        if (addIndex.isEmpty() && removeIndex.isEmpty()) {
-            return false;
-        } else {
-            return true;
-        }
+        return !addIndex.isEmpty() || !removeIndex.isEmpty();
 
     }
 
@@ -1103,11 +1088,7 @@ public class Repository {
 
         String version1 = commit1.getVersion(fileName);
         String version2 = commit2.getVersion(fileName);
-        if (version1.equals(version2)) {
-            return false;
-        } else {
-            return true;
-        }
+        return !version1.equals(version2);
     }
 
 
@@ -1149,7 +1130,9 @@ public class Repository {
             String currentKey = fringe.peek();
             if (!traversed.contains(currentKey)) {
                 traversed.add(currentKey);
-                if (table.containsKey(currentKey)) {return currentKey;}
+                if (table.containsKey(currentKey)) {
+                    return currentKey;
+                }
                 Commit c = Commit.fromFile(Utils.join(COMMITS_DIR, currentKey));
                 if (c instanceof MergedCommit) {
                     fringe.offer(((MergedCommit) c).getFirstParentID());
