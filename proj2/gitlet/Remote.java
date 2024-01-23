@@ -67,12 +67,12 @@ public class Remote extends Repository{
         if (isInHistory(remoteHeadID)) {
             // append commits (brute force)
             File remoteBlobDir = Utils.join(remoteDirString, "blobs");
-            for (File blob: BLOBS_DIR.listFiles()) {
+            for (File blob: Objects.requireNonNull(BLOBS_DIR.listFiles())) {
                 File newLocation = Utils.join(remoteBlobDir,blob.getName());
                 copyFile(blob, newLocation);
             }
             File remoteCommitDir = Utils.join(remoteDirString, "commits");
-            for (File commit: COMMITS_DIR.listFiles()) {
+            for (File commit: Objects.requireNonNull(COMMITS_DIR.listFiles())) {
                 File newLocation = Utils.join(remoteCommitDir,commit.getName());
                 copyFile(commit, newLocation);
             }
