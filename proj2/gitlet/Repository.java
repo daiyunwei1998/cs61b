@@ -614,7 +614,6 @@ public class Repository {
         }
         System.out.println();
         System.out.println("=== Untracked Files ===");
-        Index addIndex = Index.fromFile(ADD_INDEX);
         for (String untrackedFile:difference(getUntracked(), addIndex.getEntries().keySet())) {
             if (!modifiedFiles.containsKey(untrackedFile)) {
                 System.out.println(untrackedFile);
